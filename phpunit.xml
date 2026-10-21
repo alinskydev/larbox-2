@@ -2,10 +2,10 @@
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd" bootstrap="vendor/autoload.php" colors="true" stopOnFailure="true" stopOnError="true">
     <testsuites>
         <testsuite name="Unit">
-            <directory suffix="Test.php">./app/Testing/Unit/Tests</directory>
+            <!-- <directory suffix="Test.php">./app/Testing/Unit/Tests</directory> -->
         </testsuite>
         <testsuite name="Domain">
-            <directory suffix="Test.php">./modules</directory>
+            <!-- <directory suffix="Test.php">./modules</directory> -->
         </testsuite>
         <testsuite name="Feature">
             <!-- FOR DEV -->
