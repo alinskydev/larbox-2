@@ -1,0 +1,72 @@
+<?php
+
+namespace App\Providers;
+
+use Illuminate\Support\Facades\App;
+use Laravel\Telescope\IncomingEntry;
+use Laravel\Telescope\Telescope;
+use Laravel\Telescope\TelescopeApplicationServiceProvider;
+
+class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
+{
+    /**
+     * Register any application services.
+     */
+    public function register(): void
+    {
+        Telescope::night();
+
+        $this->hideSensitiveRequestDetails();
+
+        Telescope::filter(function (IncomingEntry $entry) {
+            if (App::environment('local')) return true;
+            if (App::environment('testing')) return true;
+
+            return $entry->isReportableException() ||
+                $entry->isFailedRequest() ||
+                $entry->isFailedJob() ||
+                $entry->isScheduledTask() ||
+                $entry->isSlowQuery() ||
+                $entry->hasMonitoredTag();
+        });
+    }
+
+    /**
+     * Prevent sensitive request details from being logged by Telescope.
+     */
+    protected function hideSensitiveRequestDetails(): void
+    {
+        if (App::environment('local')) return;
+
+        Telescope::hideResponseParameters(['token']);
+
+        Telescope::hideRequestHeaders([
+            'cookie',
+            'x-csrf-token',
+            'x-xsrf-token',
+        ]);
+    }
+
+    /**
+     * Configure the Telescope authorization services.
+     *
+     * @return void
+     */
+    protected function authorization()
+    {
+        $this->gate();
+
+        Telescope::auth(function ($request) {
+            if (App::environment('local')) return true;
+
+            $systemKey = (string)(config('telescope.secret_key'));
+            $userKey = (string)($_COOKIE['telescope_secret_key'] ?? null);
+
+            if ($systemKey !== '' && hash_equals($systemKey, $userKey)) {
+                return true;
+            }
+
+            abort(404);
+        });
+    }
+}

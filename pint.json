@@ -1,0 +1,55 @@
+{
+    "preset": "psr12",
+    "rules": {
+        "braces_position": {
+            "classes_opening_brace": "next_line_unless_newline_at_signature_end",
+            "functions_opening_brace": "next_line_unless_newline_at_signature_end",
+            "anonymous_classes_opening_brace": "next_line_unless_newline_at_signature_end"
+        },
+        "cast_spaces": {
+            "space": "none"
+        },
+        "class_definition": {
+            "space_before_parenthesis": false
+        },
+        "concat_space": {
+            "spacing": "one"
+        },
+        "control_structure_braces": false,
+        "function_declaration": {
+            "closure_function_spacing": "one",
+            "closure_fn_spacing": "none"
+        },
+        "new_with_parentheses": {
+            "named_class": true,
+            "anonymous_class": true
+        },
+        "no_extra_blank_lines": {
+            "tokens": [
+                "use"
+            ]
+        },
+        "no_unused_imports": true,
+        "not_operator_with_space": false,
+        "not_operator_with_successor_space": false,
+        "ordered_imports": {
+            "sort_algorithm": "alpha",
+            "imports_order": [
+                "class",
+                "function",
+                "const"
+            ]
+        },
+        "single_line_after_imports": true,
+        "single_line_empty_body": true,
+        "trailing_comma_in_multiline": {
+            "elements": [
+                "arguments",
+                "arrays",
+                "match",
+                "parameters"
+            ]
+        },
+        "unary_operator_spaces": true
+    }
+}

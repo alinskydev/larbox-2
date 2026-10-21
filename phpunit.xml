@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd" bootstrap="vendor/autoload.php" colors="true" stopOnFailure="true" stopOnError="true">
+    <testsuites>
+        <testsuite name="Unit">
+            <!-- <directory suffix="Test.php">./app/Testing/Unit/Tests</directory> -->
+        </testsuite>
+        <testsuite name="Domain">
+            <directory suffix="Test.php">./modules</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <!-- FOR DEV -->
+
+            <!-- <directory suffix="Test.php">./http/Admin/User/Tests/User</directory> -->
+            <!-- <directory suffix="Test.php">./http/Company/Trade/Tests/Sale</directory> -->
+            <!-- <directory suffix="Test.php">./http/Common/Record/Tests/Index</directory> -->
+            <!-- <directory suffix="Test.php">./http/Emulator</directory> -->
+
+            <!-- FOR FRONTEND DEVELOPER -->
+
+            <!-- <directory suffix="Test.php">./http/Admin</directory> -->
+            <!-- <directory suffix="Test.php">./http/Common</directory> -->
+            <!-- <directory suffix="Test.php">./http/Company</directory> -->
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>app</directory>
+        </include>
+    </source>
+    <php>
+        <!-- COMMON -->
+
+        <env name="APP_ENV" value="testing" />
+        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
+        <env name="APP_DEBUG" value="false" />
+
+        <env name="BCRYPT_ROUNDS" value="4" />
+        <env name="BROADCAST_CONNECTION" value="null"/>
+        <env name="CACHE_STORE" value="array" />
+        <!-- <env name="DB_CONNECTION" value="sqlite" /> -->
+        <!-- <env name="DB_DATABASE" value=":memory:" /> -->
+        <env name="MAIL_MAILER" value="array" />
+        <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="PULSE_ENABLED" value="false"/>
+        <env name="QUEUE_CONNECTION" value="sync" />
+        <env name="SESSION_DRIVER" value="array" />
+
+        <!-- TELESCOPE -->
+
+        <env name="TELESCOPE_ENABLED" value="true" />
+
+        <env name="TELESCOPE_BATCH_WATCHER" value="false" />
+        <env name="TELESCOPE_CACHE_WATCHER" value="false" />
+        <env name="TELESCOPE_CLIENT_REQUEST_WATCHER" value="true" />
+        <env name="TELESCOPE_COMMAND_WATCHER" value="true" />
+        <env name="TELESCOPE_DUMP_WATCHER" value="false" />
+        <env name="TELESCOPE_EVENT_WATCHER" value="false" />
+        <env name="TELESCOPE_EXCEPTION_WATCHER" value="true" />
+        <env name="TELESCOPE_GATE_WATCHER" value="false" />
+        <env name="TELESCOPE_JOB_WATCHER" value="true" />
+        <env name="TELESCOPE_LOG_WATCHER" value="true" />
+        <env name="TELESCOPE_MAIL_WATCHER" value="false" />
+        <env name="TELESCOPE_MODEL_WATCHER" value="false" />
+        <env name="TELESCOPE_NOTIFICATION_WATCHER" value="false" />
+        <env name="TELESCOPE_QUERY_WATCHER" value="true" />
+        <env name="TELESCOPE_REDIS_WATCHER" value="false" />
+        <env name="TELESCOPE_REQUEST_WATCHER" value="true" />
+        <env name="TELESCOPE_SCHEDULE_WATCHER" value="false" />
+        <env name="TELESCOPE_VIEW_WATCHER" value="false" />
+    </php>
+</phpunit>

@@ -1,0 +1,11 @@
+<?php
+
+namespace Http\Common\System\Tests;
+
+class SystemTest extends _TestCase
+{
+    public function test_success(): void
+    {
+        $this->sendRequest();
+    }
+}

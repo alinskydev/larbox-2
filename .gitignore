@@ -1,0 +1,17 @@
+/.idea
+/.osp
+/.vscode
+/_bats
+/storage/*.key
+/vue
+/vendor
+.env
+.env.backup
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+# phpunit.xml
+yarn-error.log
+
+TASK.md

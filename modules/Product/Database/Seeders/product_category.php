@@ -1,0 +1,102 @@
+<?php
+
+use App\Helpers\Database\DatabaseSeederHelper;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+
+return new class() extends Seeder
+{
+    public function run()
+    {
+        DB::table('product_category')->insert([
+            [
+                'creator_id' => 1,
+                'company_id' => 1,
+                'lft' => 1,
+                'rgt' => 16,
+                'parent_id' => null,
+                'name' => DatabaseSeederHelper::localized('Root 1', false),
+                'slug' => DatabaseSeederHelper::slug('Root 1', false),
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ],
+            [
+                'creator_id' => 1,
+                'company_id' => 1,
+                'lft' => 2,
+                'rgt' => 13,
+                'parent_id' => 1,
+                'name' => DatabaseSeederHelper::localized('Category 1'),
+                'slug' => DatabaseSeederHelper::slug('Category 1'),
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ],
+            [
+                'creator_id' => 1,
+                'company_id' => 1,
+                'lft' => 3,
+                'rgt' => 8,
+                'parent_id' => 2,
+                'name' => DatabaseSeederHelper::localized('Category 1-1'),
+                'slug' => DatabaseSeederHelper::slug('Category 1-1'),
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ],
+            [
+                'creator_id' => 1,
+                'company_id' => 1,
+                'lft' => 4,
+                'rgt' => 5,
+                'parent_id' => 3,
+                'name' => DatabaseSeederHelper::localized('Category 1-1-1'),
+                'slug' => DatabaseSeederHelper::slug('Category 1-1-1'),
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ],
+            [
+                'creator_id' => 1,
+                'company_id' => 1,
+                'lft' => 6,
+                'rgt' => 7,
+                'parent_id' => 3,
+                'name' => DatabaseSeederHelper::localized('Category 1-1-2'),
+                'slug' => DatabaseSeederHelper::slug('Category 1-1-2'),
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ],
+            [
+                'creator_id' => 1,
+                'company_id' => 1,
+                'lft' => 9,
+                'rgt' => 12,
+                'parent_id' => 2,
+                'name' => DatabaseSeederHelper::localized('Category 1-2'),
+                'slug' => DatabaseSeederHelper::slug('Category 1-2'),
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ],
+            [
+                'creator_id' => 1,
+                'company_id' => 1,
+                'lft' => 10,
+                'rgt' => 11,
+                'parent_id' => 6,
+                'name' => DatabaseSeederHelper::localized('Category 1-2-1'),
+                'slug' => DatabaseSeederHelper::slug('Category 1-2-1'),
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ],
+            [
+                'creator_id' => 1,
+                'company_id' => 1,
+                'lft' => 14,
+                'rgt' => 15,
+                'parent_id' => 1,
+                'name' => DatabaseSeederHelper::localized('Category 2'),
+                'slug' => DatabaseSeederHelper::slug('Category 2'),
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ],
+        ]);
+    }
+};
