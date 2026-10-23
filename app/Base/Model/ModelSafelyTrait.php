@@ -35,28 +35,29 @@ trait ModelSafelyTrait
 
     public function safelyDBProcess(callable $callback): void
     {
-        if (DB::transactionLevel() > 0) {
+        $connections = array_filter(
+            [DB::getDefaultConnection(), ...$this->additionalConnections],
+            fn($connection) => DB::connection($connection)->transactionLevel() === 0,
+        );
+
+        if (!$connections) {
             $callback();
             return;
         }
 
-        DB::beginTransaction();
-
-        foreach ($this->additionalConnections as $connection) {
+        foreach ($connections as $connection) {
             DB::connection($connection)->beginTransaction();
         }
 
         try {
             $callback();
-            DB::commit();
 
-            foreach ($this->additionalConnections as $connection) {
+            // Main is committed last: it is rolled back if an additional connection fails to commit
+            foreach (array_reverse($connections) as $connection) {
                 DB::connection($connection)->commit();
             }
         } catch (\Throwable $e) {
-            DB::rollBack();
-
-            foreach ($this->additionalConnections as $connection) {
+            foreach ($connections as $connection) {
                 DB::connection($connection)->rollBack();
             }
 
