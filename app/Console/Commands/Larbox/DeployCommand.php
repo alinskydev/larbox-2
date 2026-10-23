@@ -21,7 +21,7 @@ class DeployCommand extends Command
 
     protected string $systemEventConnection = 'main';
 
-    public function handle(): void
+    public function handle(): int
     {
         try {
             $this->runDeployScripts();
@@ -36,10 +36,13 @@ class DeployCommand extends Command
             Artisan::call('queue:restart');
 
             $this->sendMessageToTelegram('✅ Successful deploy');
+
+            return self::SUCCESS;
         } catch (\Throwable $e) {
             Artisan::call('optimize:clear');
-
             $this->sendMessageToTelegram('❌ Error in deploy', $e->getMessage() . "\n\n" . $e->getTraceAsString());
+
+            return self::FAILURE;
         }
     }
 
