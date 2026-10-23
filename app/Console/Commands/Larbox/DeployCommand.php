@@ -47,18 +47,18 @@ class DeployCommand extends Command
     {
         $files = glob(base_path('app/Console/Commands/Deploy/*.php'));
 
-        foreach ($files as $file) {
-            $fileName = File::basename($file);
+        (new Model())->safelyDBProcess(function () use ($files) {
+            foreach ($files as $file) {
+                $fileName = File::basename($file);
 
-            $isScriptExecuted = DB::connection($this->systemEventConnection)
-                ->table('system_event')
-                ->where('project', config('app.name'))
-                ->where('type', EventTypeEnum::DEPLOY->value)
-                ->where(DB::raw("additional->>'file'"), $fileName)
-                ->exists();
+                $isScriptExecuted = DB::connection($this->systemEventConnection)
+                    ->table('system_event')
+                    ->where('project', config('app.name'))
+                    ->where('type', EventTypeEnum::DEPLOY->value)
+                    ->where(DB::raw("additional->>'file'"), $fileName)
+                    ->exists();
 
-            if (!$isScriptExecuted) {
-                (new Model())->safelyDBProcess(function () use ($file, $fileName) {
+                if (!$isScriptExecuted) {
                     (require $file)->run();
 
                     DB::connection($this->systemEventConnection)
@@ -71,9 +71,9 @@ class DeployCommand extends Command
                             ]),
                             'created_at' => date('Y-m-d H:i:s'),
                         ]);
-                });
+                }
             }
-        }
+        });
     }
 
     private function sendMessageToTelegram(string $title, ?string $description = null): void
