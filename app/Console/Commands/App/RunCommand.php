@@ -12,6 +12,6 @@ class RunCommand extends Command
 
     public function handle(): void
     {
-        setUser(1);
+        setUser(2);
     }
 }
