@@ -88,7 +88,7 @@ class AppServiceProvider extends ServiceProvider
                     return $previousHandler($level, $message, $file, $line);
                 }
 
-                if (str_contains($file, 'vendor\laravel\framework\src\Illuminate')) {
+                if (str_contains(str_replace('\\', '/', $file), 'vendor/laravel/framework/src/Illuminate')) {
                     return true;
                 }
 
