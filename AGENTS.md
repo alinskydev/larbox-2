@@ -70,7 +70,7 @@ vendor/bin/pint              # code style (pint.json)
 
 ## Testing
 
-Three suites in `phpunit.xml` (`stopOnFailure`/`stopOnError`; directories are toggled manually by commenting).
+Three suites (`stopOnFailure`/`stopOnError`): `phpunit.xml.dist` (committed) runs all of them and is used by CI; local `phpunit.xml` (git-ignored) overrides it to run selected directories, toggled manually by commenting.
 
 - **Feature** (API): `http/<Area>/<Module>/Tests/<Entity>/<Action>Test.php`; methods `test_success`, `test_error___<case>`. Each folder has `_TestCase.php` extending `App\Testing\Feature\PostmanTestCase` with `$userId` (seeded: 1 = superadmin — hard-coded `id === 1` in `UserService::isSuperadmin()`, not a role; 2 = director of company 1, 3 = director of child company 1-1, 4 = employee of company 1; omit for public) and `$requestUrl`; it may hold shared tests inherited by per-user subclasses. Each test is rolled back (`DatabaseTransactions` on `main` + `history`). Executed requests are collected and saved to `storage/larbox/_postman.json` after the class; `protected bool $shouldExportToPostman = false` excludes a test.
 - **Domain**: `modules/<Module>/Tests/<Entity>/<Action>Test.php`, `_TestCase.php` extends `App\Testing\Domain\DomainTestCase` (`getValues()` + `assertChanges($callback, $expected, $error)`); checks state changes (e.g. stock balances) of services independent of HTTP.

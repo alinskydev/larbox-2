@@ -11,7 +11,7 @@
 Homestead.json
 Homestead.yaml
 npm-debug.log
-# phpunit.xml
+/phpunit.xml
 yarn-error.log
 
 TASK.md
