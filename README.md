@@ -20,8 +20,7 @@ All code follows a single standard and a consistent style: every layer (models, 
 1. Clone the repository and run `composer install`.
 2. Create `.env` from [.env.example](.env.example) and set the required parameters. Run `php artisan key:generate`.
 3. Create the 3 required databases: `main`, `history`, `telescope`. In the main database, run `CREATE EXTENSION IF NOT EXISTS pg_trgm;`.
-4. Create the `storage/larbox/_tmp` directory.
-5. Run `php artisan larbox:migrate`.
+4. Run `php artisan larbox:migrate`.
 
 ## Environment
 
