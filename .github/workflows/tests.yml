@@ -109,11 +109,12 @@ jobs:
         run: php artisan key:generate
 
       # Integrations call emulators over real HTTP (STORE_URL, STORAGE_URL, TELEGRAM_BOT_URL)
+      # Server and tests run as root: FileHelper does chown(..., 'www-data')
       - name: Start server for emulators
-        run: php artisan serve --host=127.0.0.1 --port=8000 > storage/logs/serve.log 2>&1 &
+        run: sudo php artisan serve --host=127.0.0.1 --port=8000 > storage/logs/serve.log 2>&1 &
 
       - name: Run tests
-        run: php artisan larbox:test
+        run: sudo php artisan larbox:test
 
       - name: Show server log
         if: failure()

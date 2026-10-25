@@ -76,7 +76,7 @@ Three suites in `phpunit.xml` (`stopOnFailure`/`stopOnError`; directories are to
 - **Domain**: `modules/<Module>/Tests/<Entity>/<Action>Test.php`, `_TestCase.php` extends `App\Testing\Domain\DomainTestCase` (`getValues()` + `assertChanges($callback, $expected, $error)`); checks state changes (e.g. stock balances) of services independent of HTTP.
 - **Unit**: `app/Testing/Unit/Tests/`, `App\Testing\Unit\TestCase` — no transactions, revert changes manually.
 - Real PostgreSQL DB from `.env` (no separate test DB, no sqlite) — `larbox:test` / `larbox:migrate` wipe it. `APP_ENV=testing`, `QUEUE_CONNECTION=sync`, `CACHE_STORE=array`, `MAIL_MAILER=array`, `APP_DEBUG=false` (tests rely on the JSON error mapping).
-- CI: `.github/workflows/tests.yml` runs `larbox:test` on push / PR to `main` (PostgreSQL 14 service, own `.env` with `APP_ENV=local`, `php artisan serve` for the emulators).
+- CI: `.github/workflows/tests.yml` runs `larbox:test` on push / PR to `main` (PostgreSQL 14 service, own `.env` with `APP_ENV=local`, `php artisan serve` for the emulators; both run as root because `FileHelper` chowns uploads to `www-data`).
 - `TESTING_SHOW_DETAILED_ERROR=true` prints the trace of a failed request and stops the run.
 
 ## Architecture notes
