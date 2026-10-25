@@ -34,12 +34,13 @@ jobs:
           extensions: bcmath, exif, gd, intl, mbstring, pdo_pgsql, pgsql, zip
           coverage: none
 
-      - name: Create history and telescope databases
+      - name: Prepare databases
         env:
           PGHOST: 127.0.0.1
           PGUSER: postgres
           PGPASSWORD: postgres
         run: |
+          psql -d larbox_2 -c 'CREATE EXTENSION pg_trgm'
           psql -c 'CREATE DATABASE larbox_2_history'
           psql -c 'CREATE DATABASE larbox_2_telescope'
 
