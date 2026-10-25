@@ -10,6 +10,8 @@ class DictionaryController extends Controller
 {
     public function __invoke(): JsonResponse
     {
+        5 / 0;
+
         $response = [
             'enums' => [
                 'request_paths' => [
