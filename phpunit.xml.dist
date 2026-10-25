@@ -40,24 +40,5 @@
         <!-- TELESCOPE -->
 
         <env name="TELESCOPE_ENABLED" value="false" />
-
-        <env name="TELESCOPE_BATCH_WATCHER" value="false" />
-        <env name="TELESCOPE_CACHE_WATCHER" value="false" />
-        <env name="TELESCOPE_CLIENT_REQUEST_WATCHER" value="true" />
-        <env name="TELESCOPE_COMMAND_WATCHER" value="true" />
-        <env name="TELESCOPE_DUMP_WATCHER" value="false" />
-        <env name="TELESCOPE_EVENT_WATCHER" value="false" />
-        <env name="TELESCOPE_EXCEPTION_WATCHER" value="true" />
-        <env name="TELESCOPE_GATE_WATCHER" value="false" />
-        <env name="TELESCOPE_JOB_WATCHER" value="true" />
-        <env name="TELESCOPE_LOG_WATCHER" value="true" />
-        <env name="TELESCOPE_MAIL_WATCHER" value="false" />
-        <env name="TELESCOPE_MODEL_WATCHER" value="false" />
-        <env name="TELESCOPE_NOTIFICATION_WATCHER" value="false" />
-        <env name="TELESCOPE_QUERY_WATCHER" value="true" />
-        <env name="TELESCOPE_REDIS_WATCHER" value="false" />
-        <env name="TELESCOPE_REQUEST_WATCHER" value="true" />
-        <env name="TELESCOPE_SCHEDULE_WATCHER" value="false" />
-        <env name="TELESCOPE_VIEW_WATCHER" value="false" />
     </php>
 </phpunit>
