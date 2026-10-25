@@ -4,7 +4,7 @@ Guidance for AI coding agents working in this repository.
 
 ## Project overview
 
-**Laravel EXP** (`laravel-exp.loc`) — API-only Laravel 13 backend built on the **Larbox** starter kit. Modular, multi-tenant (company-scoped) REST API: soft deletes, audit/history, role permissions, trade (purchases, sales, stock), Excel import/export, PDF, mail, Telegram, external integrations, PostgreSQL tuned for high load. The admin panel is a separate Vue app (`vue/`, currently empty); `resources/` is stock skeleton.
+**Laravel EXP** (`laravel-exp.loc`) — API-only Laravel 13 backend built on the **Larbox** starter kit. Modular, multi-tenant (company-scoped) REST API: soft deletes, audit/history, role permissions, trade (purchases, sales, stock), Excel import/export, PDF, mail, Telegram, external integrations, PostgreSQL tuned for high load. `resources/` is stock skeleton.
 
 - PHP `^8.3`, Laravel `^13.7`, PostgreSQL only (`app/Database/*`, registered by `App\Providers\DatabaseServiceProvider`)
 - `App\Base\Application` binds custom `App\Routing\Router` / `ResourceRegistrar`: `apiResource` = index, show (`{id}`), create, update / delete (`{model}`), restore (`{id}/restore`)
@@ -70,7 +70,7 @@ vendor/bin/pint              # code style (pint.json)
 
 ## Testing
 
-Three suites in `phpunit.xml` (`stopOnFailure`/`stopOnError`; directories are toggled manually by commenting). No CI.
+Three suites in `phpunit.xml` (`stopOnFailure`/`stopOnError`; directories are toggled manually by commenting).
 
 - **Feature** (API): `http/<Area>/<Module>/Tests/<Entity>/<Action>Test.php`; methods `test_success`, `test_error___<case>`. Each folder has `_TestCase.php` extending `App\Testing\Feature\PostmanTestCase` with `$userId` (seeded: 1 = superadmin, 2 = director of company 1, 3 = director of child company 1-1, 4 = employee of company 1; omit for public) and `$requestUrl`; it may hold shared tests inherited by per-user subclasses. Each test is rolled back (`DatabaseTransactions` on `main` + `history`). Executed requests are collected and saved to `storage/larbox/_postman.json` after the class; `protected bool $shouldExportToPostman = false` excludes a test.
 - **Domain**: `modules/<Module>/Tests/<Entity>/<Action>Test.php`, `_TestCase.php` extends `App\Testing\Domain\DomainTestCase` (`getValues()` + `assertChanges($callback, $expected, $error)`); checks state changes (e.g. stock balances) of services independent of HTTP.
@@ -129,7 +129,6 @@ Three suites in `phpunit.xml` (`stopOnFailure`/`stopOnError`; directories are to
 ## Prohibited
 
 - Don't go beyond the project scope or touch third-party utilities like Redis. If they're listed as active, they exist and work properly.
-- Don't browse project files that aren't needed for the task.
-- Don't leave the /app, /http, /integrations, /modules folders.
+- Don't browse project files which aren't needed for the task.
+- Don't go out of `/app`, `/http`, `/integrations`, `/modules` folders.
 - Don't install third-party packages.
-- Don't run Python commands. I don't have it.
