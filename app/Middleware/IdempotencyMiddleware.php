@@ -13,7 +13,7 @@ class IdempotencyMiddleware
     {
         $idempotencyKey = $request->header('Idempotency-Key');
 
-        if (!$request->isMethod($request::METHOD_POST) || !$idempotencyKey) {
+        if (!$idempotencyKey || !$request->isMethod($request::METHOD_POST)) {
             return $next($request);
         }
 
@@ -31,8 +31,8 @@ class IdempotencyMiddleware
         if ($response instanceof JsonResponse && $response->isSuccessful()) {
             Cache::set($cacheKey, [
                 'data' => $response->getData(true),
-                'status' => $response->getStatusCode()
-            ], 3600);
+                'status' => $response->getStatusCode(),
+            ], 600);
         }
 
         return $response;
