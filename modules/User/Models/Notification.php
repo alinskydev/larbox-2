@@ -32,11 +32,14 @@ class Notification extends Model
         'recipient_id',
     ];
 
-    protected $casts = [
-        'params' => 'array',
-    ];
-
     public string $resourceClass = NotificationResource::class;
+
+    protected function casts(): array
+    {
+        return [
+            'params' => 'array',
+        ];
+    }
 
     public function creator(): BelongsTo
     {

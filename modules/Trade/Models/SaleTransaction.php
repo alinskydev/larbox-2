@@ -24,13 +24,16 @@ class SaleTransaction extends Model
 {
     protected $table = 'trade_sale_transaction';
 
-    protected $casts = [
-        'amount' => 'float',
-    ];
-
     protected array $autoFilters = [
         'holding_companies' => ['company_id'],
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'amount' => 'float',
+        ];
+    }
 
     public function company(): BelongsTo
     {

@@ -57,14 +57,17 @@ class Product extends Model
 
     protected $table = 'product';
 
-    protected $casts = [
-        'image_list' => AsImages::class . ':scaleDown_100|500',
-        'image_list_thumbs' => 'array',
-    ];
-
     protected array $autoFilters = [
         'holding_companies' => ['company_id'],
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'image_list' => AsImages::class . ':scaleDown_100|500',
+            'image_list_thumbs' => 'array',
+        ];
+    }
 
     public function observerParams(): array
     {

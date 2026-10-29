@@ -21,7 +21,10 @@ class Token extends Model
         'token',
     ];
 
-    protected $casts = [
-        'token' => 'encrypted',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'token' => 'encrypted',
+        ];
+    }
 }

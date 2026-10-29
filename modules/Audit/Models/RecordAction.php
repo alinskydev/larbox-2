@@ -38,16 +38,19 @@ class RecordAction extends Model
         'new_values',
     ];
 
-    protected $casts = [
-        'old_values' => 'array',
-        'new_values' => 'array',
-    ];
-
     public string $resourceClass = RecordActionResource::class;
 
     protected array $autoFilters = [
         'holding_companies' => ['company_id'],
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'old_values' => 'array',
+            'new_values' => 'array',
+        ];
+    }
 
     public function auditable(): MorphTo
     {

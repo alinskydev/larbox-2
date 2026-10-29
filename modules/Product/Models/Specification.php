@@ -35,14 +35,17 @@ class Specification extends Model
 
     protected $table = 'product_specification';
 
-    protected $casts = [
-        'name' => 'array',
-        'description' => 'array',
-    ];
-
     protected array $autoFilters = [
         'holding_companies' => ['company_id'],
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'name' => 'array',
+            'description' => 'array',
+        ];
+    }
 
     public function observerParams(): array
     {

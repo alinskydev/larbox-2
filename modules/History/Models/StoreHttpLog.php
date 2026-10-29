@@ -30,13 +30,16 @@ class StoreHttpLog extends Model
     protected $connection = 'history';
     protected $table = 'history_store';
 
-    protected $casts = [
-        'request_body' => 'array',
-        'response_body' => 'array',
-        'additional' => 'array',
-    ];
-
     public string $resourceClass = StoreHttpLogResource::class;
+
+    protected function casts(): array
+    {
+        return [
+            'request_body' => 'array',
+            'response_body' => 'array',
+            'additional' => 'array',
+        ];
+    }
 
     protected static function booted(): void
     {

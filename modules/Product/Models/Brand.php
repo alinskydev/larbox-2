@@ -39,14 +39,17 @@ class Brand extends Model
 
     protected $table = 'product_brand';
 
-    protected $casts = [
-        'image' => AsImage::class . ':scaleDown_100|500',
-        'image_thumbs' => 'array',
-    ];
-
     protected array $autoFilters = [
         'holding_companies' => ['company_id'],
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'image' => AsImage::class . ':scaleDown_100|500',
+            'image_thumbs' => 'array',
+        ];
+    }
 
     public function observerParams(): array
     {
