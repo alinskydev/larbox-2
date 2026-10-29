@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -36,16 +37,22 @@ return Application::configure(basePath: dirname(__DIR__))
                 if ($e->getPrevious() instanceof ModelNotFoundException) {
                     return response()->json(['message' => __('Запись не найдена')], 400);
                 } else {
-                    return response()->json(['message' => 'Not found'], 404);
+                    return response()->json(['message' => __('Страница не найден')], 404);
                 }
             }
 
             if ($e instanceof AuthenticationException) {
-                return response()->json(['message' => 'Unauthenticated'], 401);
+                return response()->json(['message' => __('Необходимо авторизоваться')], 401);
+            }
+
+            if ($e instanceof AccessDeniedHttpException) {
+                return response()->json([
+                    'message' => $e->getMessage() ?: __('У вас нет доступа для совершения данного действия'),
+                ], 403);
             }
 
             if ($e instanceof QueryException && $isProduction) {
-                return response()->json(['message' => 'Invalid input data type'], 400);
+                return response()->json(['message' => __('Неверные вводные данные')], 400);
             }
 
             if ($e instanceof ValidationException) {
@@ -68,11 +75,11 @@ return Application::configure(basePath: dirname(__DIR__))
             $message = $e->getMessage();
 
             if (str_starts_with($message, 'SQLSTATE[22003]')) {
-                $message = 'Value is out of limit';
+                $message = __('Значение превышает лимит');
             }
 
             if (str_starts_with($message, 'SQLSTATE[22P02]')) {
-                $message = 'Invalid input syntax for this type';
+                $message = __('Неверные вводные данные');
             }
 
             if (str_starts_with($message, 'SQLSTATE[23503]')) {
@@ -80,7 +87,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return response()->json(
-                ['message' => $message ?: 'An error occurred'],
+                ['message' => $message ?: __('Произошла ошибка')],
                 method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 400,
             );
         });

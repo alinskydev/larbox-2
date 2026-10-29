@@ -2,6 +2,7 @@
 
 namespace App\Middleware;
 
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
@@ -34,7 +35,7 @@ class ConcurrentWritesPreventionMiddleware
                 }
             }
 
-            abort(409, 'Too Many Attempts.');
+            throw new ThrottleRequestsException();
         } else {
             return $next($request);
         }

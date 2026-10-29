@@ -20,6 +20,7 @@ use Modules\User\Enums\UserTypeEnum;
 use Modules\User\Helpers\Role\RolePermissionHelper;
 use Modules\User\Models\Role;
 use Modules\User\Models\User;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class IndexController extends Controller
 {
@@ -201,17 +202,21 @@ class IndexController extends Controller
                     }),
                 field: 'name',
             ),
-            default => abort(404),
+            default => throw new NotFoundHttpException(),
         };
 
-        if (!$params->isAccessible) abort(404);
+        if (!$params->isAccessible) {
+            throw new NotFoundHttpException();
+        }
 
         return $params;
     }
 
     private function productCategoryTree(): JsonResponse
     {
-        if (!UserTypeEnum::isCompanyType(user()->type)) abort(404);
+        if (!UserTypeEnum::isCompanyType(user()->type)) {
+            throw new NotFoundHttpException();
+        }
 
         $parentId = Category::query()->whereNull('parent_id')->firstOrFail()->id;
 

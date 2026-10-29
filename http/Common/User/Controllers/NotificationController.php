@@ -5,6 +5,7 @@ namespace Http\Common\User\Controllers;
 use App\Controllers\ResourceController;
 use App\Helpers\Controller\ControllerStreamHelper;
 use Http\Common\User\Filters\NotificationFilter;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Modules\User\Enums\NotificationTypeEnum;
 use Modules\User\Exceptions\NotificationException;
@@ -41,7 +42,9 @@ class NotificationController extends ResourceController
     {
         if (!in_array($model->type, [
             NotificationTypeEnum::EXCEL_EXPORT_COMPLETED->value,
-        ])) abort(404);
+        ])) {
+            throw new ModelNotFoundException();
+        }
 
         $name = $model->params['file'] ?? '';
         $file = storage_path("larbox/_tmp/$name");

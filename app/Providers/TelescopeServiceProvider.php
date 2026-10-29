@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\App;
 use Laravel\Telescope\IncomingEntry;
 use Laravel\Telescope\Telescope;
 use Laravel\Telescope\TelescopeApplicationServiceProvider;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
 {
@@ -66,7 +67,7 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
                 return true;
             }
 
-            abort(404);
+            throw new NotFoundHttpException();
         });
     }
 }
