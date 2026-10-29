@@ -37,7 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 if ($e->getPrevious() instanceof ModelNotFoundException) {
                     return response()->json(['message' => __('Запись не найдена')], 400);
                 } else {
-                    return response()->json(['message' => __('Страница не найден')], 404);
+                    return response()->json(['message' => __('Страница не найдена')], 404);
                 }
             }
 

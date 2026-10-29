@@ -56,7 +56,8 @@ class CategorySearch extends Search
                     ->selectRaw('count(*)')
                     ->join('product_category as p_c', 'p_c.id', 'category_id')
                     ->whereBetweenColumns('p_c.lft', ['product_category.lft', 'product_category.rgt'])
-                    ->whereNull('p_c.deleted_at'),
+                    ->whereNull('p_c.deleted_at')
+                    ->withoutTrashed(),
             ]);
         }
 

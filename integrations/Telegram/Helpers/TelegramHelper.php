@@ -133,7 +133,9 @@ class TelegramHelper
 
     public static function devChats(): array
     {
-        $chats = explode(',', config('integrations.telegram_bot.dev_chat_ids'));
+        if (!($chats = config('integrations.telegram_bot.dev_chat_ids'))) return [];
+
+        $chats = explode(',', $chats);
         $chats = array_map('trim', $chats);
 
         return $chats;
