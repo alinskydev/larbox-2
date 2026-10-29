@@ -3,8 +3,11 @@
 namespace App\Providers;
 
 use App\Base\Application;
+use App\Controllers\ResourceController;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Route as RouteFacede;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -67,6 +70,11 @@ class AppServiceProvider extends ServiceProvider
             if ($company && $company->deleted_at) return false;
 
             return true;
+        });
+
+        RouteFacede::bind('model', function (string $value, Route $route) {
+            $controller = $route->getController();
+            return $controller instanceof ResourceController ? $controller->resolveRouteModel($value) : $value;
         });
 
         $this->app->booted(function () {

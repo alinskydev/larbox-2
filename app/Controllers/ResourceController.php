@@ -11,7 +11,6 @@ use App\Search\Search;
 use Illuminate\Contracts\Validation\ValidatesWhenResolved;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Route;
 use Modules\Seo\Traits\SeoMetaModelTrait;
 
 class ResourceController extends Controller
@@ -27,16 +26,6 @@ class ResourceController extends Controller
         protected ?string $formRequestClass = null,
     ) {
         $this->resourceClass ??= $this->model->resourceClass;
-
-        if ($this->filter) {
-            Route::bind('model', function ($value) {
-                return $this->filter->process($this->model->query())
-                    ->where($this->model->getKeyName(), $value)
-                    ->firstOrFail();
-            });
-        } else {
-            Route::model('model', $this->model::class);
-        }
 
         $this->middleware(function ($request, $next) {
             if ($this->search !== null) {
@@ -58,6 +47,12 @@ class ResourceController extends Controller
 
             return $next($request);
         });
+    }
+
+    public function resolveRouteModel(string $value): Model
+    {
+        $query = $this->filter ? $this->filter->process($this->model->query()) : $this->model->query();
+        return $query->where($this->model->getKeyName(), $value)->firstOrFail();
     }
 
     public function index()
