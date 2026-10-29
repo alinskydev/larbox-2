@@ -5,19 +5,24 @@ description: Mandatory standards for business exceptions in modules/<Module>/Exc
 
 # Exceptions Rules
 
-Location: `modules/<Module>/Exceptions/<Entity>Exception.php`, namespace `Modules\<Module>\Exceptions`, always extends `App\Exceptions\BusinessException`.
-Canonical examples: `modules/Trade/Exceptions/SaleException.php`, `modules/Stock/Exceptions/StockException.php`, `modules/User/Exceptions/RoleException.php`.
+Location: `modules/<Module>/Exceptions/<Entity>Exception.php`, namespace `Modules\<Module>\Exceptions`, always extends `App\Exceptions\BusinessException` (`abstract`, `extends \Exception implements ShouldntReport`, `__construct(public string $error, array $replace = [])`, `abstract protected function messages(): array`).
+Canonical examples: `modules/Trade/Exceptions/SaleException.php`, `modules/Company/Exceptions/SubscriptionException.php`, `modules/User/Exceptions/RoleException.php`.
 
 ## Rules
-- One class per entity/feature: `<Entity>Exception` (`SaleException`, `RoleException`, `DailyLimitException`). Add a new error to the existing class of that entity instead of creating a new class.
+- One class per entity/feature: `<Entity>Exception` (`SaleException`, `RoleException`, `DailyLimitException`). Add a new error to the existing class of that entity. Same-named errors are duplicated per class (`UNDELETABLE` in `RoleException` and `UserException`), not shared.
 - Each error = `public const <ERROR> = '<error>';` — UPPER_SNAKE name, value is the same name in lower snake_case. Constants sorted alphabetically.
 - `protected function messages(): array` maps every constant to a Russian message, same order as the constants: `self::NOT_ENOUGH_PRODUCT => 'Недостаточно товара ":name" на складе'`.
-- Placeholders use Laravel `:name` syntax; quote names/statuses inside the message (`":name"`), leave numbers bare (`:limit`, `:available`).
-- Throw with the constant and named replacements: `throw new StockException(StockException::NOT_ENOUGH_PRODUCT, ['name' => $name]);`. The base constructor translates via `__($messages[$error], $replace)` — never call `__()` yourself.
-- `$exception->error` holds the constant value; domain tests assert it (`DomainTestCase::assertChanges(..., error: SaleException::PRICE_NOT_SET)`), see http-tests-rules.
-- Thrown from: services (`Trade\Services\SaleService`), observers (`User\Observers\RoleObserver`, `Company\Observers\Subscription\SubscriptionCheckLimitObserver`), requests (`User\Requests\RoleRequest`), helpers (`System\Helpers\DailyLimitHelper`), controllers (`http/Admin/User/Controllers/UserController.php`).
-- Rendering is automatic: the fallback in `bootstrap/app.php` returns `{"message": "..."}` with status 400 (skipped when `APP_DEBUG=true`). `BusinessException` implements `ShouldntReport`, so business errors are not logged.
-- Thrown inside `safely*()` / `safelyDBProcess()` the exception rolls back the transaction on `main` and additional connections (`App\Base\Model\ModelSafelyTrait`).
+- Placeholders use Laravel `:name` syntax; quote names/statuses/labels (`":name"`, `":status"`), leave numbers and times bare (`:limit`, `ID :id`, `:time`).
+- Throw with the constant and named replacements: `throw new StockException(StockException::NOT_ENOUGH_PRODUCT, ['name' => $name]);`. Labels are prepared by the caller (`PurchaseStatusEnum::labelByValue(...)`); a conditional error goes into `$error` first (`SubscriptionCheckLimitObserver`).
+- The base constructor translates via `__($messages[$error], $replace)` — never call `__()` yourself. `larbox:collect_translations` scans only `__('...')` literals, so add each new message with `en` / `uz` values to `lang/*.json` manually.
+- `$exception->error` holds the constant value; domain tests assert it (`assertChanges(..., error: SaleException::PRICE_NOT_SET)`), see http-tests-rules.
+- Thrown from services (`SaleService`, `PurchaseService`, `StockService`, `AuthCodeService`), observers (`RoleObserver`, `UserObserver`, `LanguageObserver`, `OptionObserver`, `SubscriptionCheckLimitObserver`), requests (`modules/User/Requests/RoleRequest.php`, `http/Admin/User/Requests/UserRequest.php`), helpers (`DailyLimitHelper`, `History\Helpers\SearchHelper`), controllers (`http/Admin/User/Controllers/UserController.php`, `http/Common/User/Controllers/NotificationController.php`).
+- Rendering is automatic: the `bootstrap/app.php` fallback returns `{"message": "..."}` with 400 (no `getStatusCode()`); skipped when `APP_DEBUG=true`. `ShouldntReport` keeps them out of `audit_error_log`. Inside `safely*()` / `safelyDBProcess()` they roll back `main` and `additionalConnections`.
+
+## Non-business errors (instead of abort())
+- 404: `throw new NotFoundHttpException()` (`http/Common/Record/Controllers/IndexController.php`, `RolePermissionHelper`); record not found / not applicable: `throw new ModelNotFoundException()` or `findOrFail()` → 400 `Запись не найдена` (`NotificationController::download`); 403: `throw new AccessDeniedHttpException()` (`RoleMiddleware`, `RoleHelper::canAccessRoute`); 429: `throw new ThrottleRequestsException()` (`ConcurrentWritesPreventionMiddleware`).
+- Legacy `abort()` left: `abort(409)` in `ResourceFormRequest`, `abort(403, ...)` in `UserSuperadminMiddleware`, `abort(202, ...)` in `ExcelExportHelper::process`.
+- `app/` core cannot import module exceptions: user-facing errors there are `throw new \Exception(__('...'))` → 400, but logged (`ControllerModelHelper::checkCondition`, `ExcelExportHelper`, `ExcelImportFormRequest`, `NestedSetModelTrait`). Developer misconfiguration: `\Exception('...')` without `__()` (`ModelService`, `ResourceController`, `QueryBuilder`). External APIs: `App\Integration\IntegrationException`.
 
 ## Template
 ```php
@@ -43,7 +48,7 @@ class <Entity>Exception extends BusinessException
 ```
 
 ## Don't
-- Don't use `abort(400, ...)` or generic `\Exception` / `\RuntimeException` for business errors. `abort()` is only for 403/404 access checks and 409 conflicts (`RoleMiddleware`, `ResourceFormRequest`, `ConcurrentWritesPreventionMiddleware`).
+- Don't use `abort(400, ...)`, `\Exception` / `\RuntimeException` for business errors in `modules/` or `http/`; don't add new `abort()` calls at all — throw the matching HTTP exception.
 - Don't add `render()`, `report()`, `getStatusCode()` or custom constructors to exception classes; don't register handlers for them in `bootstrap/app.php`.
-- Don't create exceptions outside `modules/<Module>/Exceptions`. `app/Exceptions` holds only the abstract base. Integration errors use `App\Integration\IntegrationException` (see integrations-rules).
+- Don't create exceptions outside `modules/<Module>/Exceptions`. `app/Exceptions` holds only the abstract base.
 - Don't pass raw strings as `$error`; always the class constant.

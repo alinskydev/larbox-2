@@ -9,7 +9,7 @@ Guidance for AI coding agents working in this repository.
 - PHP `^8.3`, Laravel `^13.7`, PostgreSQL only (`app/Database/*`, registered by `App\Providers\DatabaseServiceProvider`)
 - `App\Base\Application` binds custom `App\Routing\Router` / `ResourceRegistrar`: `apiResource` = index, show (`{id}`), create, update / delete (`{model}`), restore (`DELETE {id}/restore`); `deleteMultiple` / `restoreMultiple` exist but are off by default
 - Auth: Sanctum tokens (`Modules\User\Models\AccessToken`) + `Modules\User\Middleware\RoleMiddleware`; superadmin-only groups add `UserSuperadminMiddleware`
-- Packages: fast-excel-writer, phpspreadsheet, dompdf, intervention/image, kalnoy/nestedset, mews/purifier, guzzle; dev: telescope (local/testing only), pint
+- Packages: fast-excel-writer, phpspreadsheet, dompdf, intervention/image, kalnoy/nestedset, mews/purifier, guzzle; dev: telescope (registered in local/testing, disabled in tests via `TELESCOPE_ENABLED=false`), pint
 - Dev: OpenServer on Windows, Git Bash; `APP_URL=http://larbox-2.loc`, no `/api` prefix
 - Languages: `en`, `ru`, `uz` — runtime list from DB via `singletons()->system->languages`; `config/larbox.php` is used by seeders/migrations. Locale from `Accept-Language` (`LocaleMiddleware`). User-facing strings via `__('...')` (Russian source text, `lang/*.json`)
 
@@ -25,7 +25,7 @@ Guidance for AI coding agents working in this repository.
 ### `app/` core
 
 - `Base/` — `Application`, `Model` (+ `Model/ModelSafelyTrait`, `ModelSoftDeleteTrait`, `ModelRelationsTrait`), `EloquentBuilder` (+ `EloquentBuilderFilterByPermissionsTrait`, `EloquentBuilderFilterByUserTrait`), `QueryBuilder` (+ `QueryBuilderRelationsTrait`), `ModelService`, `Resource`, `Filter`, `Job`, `Rule`, `EnumTrait`, `Singleton`
-- `Controllers/` — `Controller` (`successResponse()`), `ResourceController` (generic CRUD)
+- `Controllers/` — `Controller` (`successResponse()`), `ResourceController` (generic CRUD, `resolveRouteModel()`)
 - `Helpers/Controller/` — `ControllerModelHelper` (`setValues`, `toggleValue`, `delete`, `checkCondition`), `ControllerStreamHelper` (`download`)
 - `Requests/` — `FormRequest`, `ResourceFormRequest` (+ `DeletableFileFieldsTrait`)
 - `Search/` — `Search` engine (`SearchFilter`, `SearchSort`, `SearchShow`, `Filter/Types`, `Enums/`)
@@ -35,7 +35,7 @@ Guidance for AI coding agents working in this repository.
 - `Helpers/` (incl. `Database/`: `DatabaseTransactionHelper`, `DatabaseMigrationPartitionHelper`, `DatabaseMigrationIndexHelper`, `DatabaseSeederHelper`; `Validation/`, `PdfHelper`, `ImageHelper`), `Jobs/`, `Middleware/`, `Rules/`, `Routing/`, `Loggers/` (`DatabaseLogger` = default log channel), `Database/`, `Providers/`
 - `Testing/` — `Feature/PostmanTestCase`, `Feature/ScenarioTestCase`, `Feature/Helpers/`, `Feature/Traits/`, `Domain/DomainTestCase`, `Unit/`, `CreatesApplicationTrait`
 - `Utils/*.php` — global functions loaded by composer `autoload.files`: `user()`, `setUser()`, `setUserAsCompanyDirector()`, `singletons()`, `num_round()`, `num_e/ne/gt/gte/lt/lte()`
-- `Console/Commands/` — `App/`, `Larbox/`, `Examples/` (+ `Deploy/` for one-time scripts, created on demand)
+- `Console/Commands/` — `App/` (incl. `app:run` scratch command), `Larbox/`, `Examples/` (+ `Deploy/` for one-time scripts, created on demand)
 
 ### Module (`modules/<Module>/`)
 
@@ -49,7 +49,7 @@ Only the dirs it needs: `Database/Migrations/<table>.php`, `Database/Seeders/<ta
 - `common/` — no group auth; each `routes.php` adds `auth:sanctum` where needed (User, Record, System, logout); `common.*` skips the role check; `common/auth` uses the `auth` limiter
 - `emulator/` — fake Storage/Store/Telegram services, no auth, non-production only
 
-Typical controller: extends `App\Controllers\ResourceController`, calls `parent::__construct(...)` with model, search, filter and form request classes (resource defaults to `$model->resourceClass`) and gets the CRUD actions. When a `filter` is passed, route-model binding re-applies it, so records of other companies are not reachable by ID. Query params: `with[]`, `filter[]`, `sort[]`, `show[]` (`with_deleted`, `only_deleted`), `page`, `page_size`.
+Typical controller: extends `App\Controllers\ResourceController`, calls `parent::__construct(...)` with model, search, filter and form request classes (resource defaults to `$model->resourceClass`) and gets the CRUD actions. `{model}` is resolved by one global `Route::bind('model')` in `AppServiceProvider`: for a `ResourceController` it calls `resolveRouteModel()`, which re-applies the controller's `filter`, so records of other companies are not reachable by ID; other controllers get implicit binding. Query params: `with[]`, `filter[]`, `sort[]`, `show[]` (`with_deleted`, `only_deleted`), `page`, `page_size`.
 
 ## Commands
 
@@ -57,46 +57,47 @@ Typical controller: extends `App\Controllers\ResourceController`, calls `parent:
 php artisan larbox:migrate   # migrate:fresh over modules/*/Database/Migrations -> seeders -> *-relations.php
 php artisan larbox:test      # optimize:clear + larbox:migrate + test suite
 php artisan larbox:deploy    # production deploy (one-time deploy scripts, cache flush, optimize, queue:restart, Telegram notice)
-php artisan larbox:collect_translations   # collect __('...') texts and field names into lang/
+php artisan larbox:collect_translations   # collect __('...') texts and field names into lang/ (BusinessException::messages() are not collected)
 php artisan test             # tests only (DB must already be migrated)
 vendor/bin/pint              # code style (pint.json)
 ```
 
-- Queue workers in dev: `_bats/queue - *.bat` (also `default`, `recalculation`, `tmp`, not used by any job). Every job sets its queue: `excel`, `mail`, `maintenance`, `notification`, `telegram`.
+- Queue workers in dev: `_bats/queue - *.bat` (also `default`, `recalculation`, `tmp`, not used by any job). Every job sets its queue: `excel`, `mail`, `maintenance`, `notification`, `telegram`. All async queue connections use `after_commit => true`, `retry_after` 660.
 - Scheduler (`routes/console.php`): `telescope:prune` (local), `app:process_db_daily` (00:01; chains `RemoveOldDataJob` + `ProcessDBJob` on `maintenance`, cleans `storage/larbox/_tmp`), `app:remove_idle_db_connections` (hourly).
 - `db:seed`, `db:wipe`, `migrate*`, `larbox:migrate`, `larbox:test`, `larbox:export_postman_collection` are blocked outside `local` — never bypass.
-- One-time production changes: `larbox:create_file_for_deploy` creates a script in `app/Console/Commands/Deploy/`; `larbox:deploy` runs each once (tracked in `system_event`).
+- One-time production changes: `larbox:create_file_for_deploy` creates a script in `app/Console/Commands/Deploy/`; `larbox:deploy` runs each once (tracked in `system_event`), all in one transaction.
 - `larbox:migrate` flushes `Cache::tags(['db_schema'])` — needs a tag-capable cache store (redis).
 
 ## Testing
 
 Three suites (`stopOnFailure`/`stopOnError`): `phpunit.xml.dist` (committed) runs all of them and is used by CI; local `phpunit.xml` (git-ignored) overrides it to run selected directories, toggled manually by commenting.
 
-- **Feature** (API): `http/<Area>/<Module>/Tests/<Entity>/<Action>Test.php`; methods `test_success`, `test_error___<case>`. Each folder has `_TestCase.php` extending `App\Testing\Feature\PostmanTestCase` with `$userId` (seeded: 1 = superadmin — hard-coded `id === 1` in `UserService::isSuperadmin()`, not a role; 2 = director of company 1, 3 = director of child company 1-1, 4 = employee of company 1; omit for public) and `$requestUrl`; it may hold shared tests inherited by per-user subclasses. Each test is rolled back (`DatabaseTransactions` on `main` + `history`). Executed requests are collected and saved to `storage/larbox/_postman.json` after the class; `protected bool $shouldExportToPostman = false` excludes a test.
+- **Feature** (API): `http/<Area>/<Module>/Tests/<Entity>/<Action>Test.php`; methods `test_success`, `test_error___<case>`. Each folder has `_TestCase.php` extending `App\Testing\Feature\PostmanTestCase` with `$userId` (seeded: 1 = superadmin — hard-coded `id === 1` in `UserService::isSuperadmin()`, not a role; 2 = director of company 1, 3 = director of child company 1-1, 4 = employee of company 1; omit for public) and `$requestUrl`; it may hold shared tests inherited by per-user subclasses. Each test is rolled back (`DatabaseTransactions` on `main` + `history`). The last request of each test is collected and saved to `storage/larbox/_postman.json` after the class; `protected bool $shouldExportToPostman = false` excludes the whole class.
 - **Domain**: `modules/<Module>/Tests/<Entity>/<Action>Test.php`, `_TestCase.php` extends `App\Testing\Domain\DomainTestCase` (`getValues()` + `assertChanges($callback, $expected, $error)`); checks state changes (e.g. stock balances) of services independent of HTTP.
 - **Unit**: `app/Testing/Unit/Tests/`, `App\Testing\Unit\TestCase` — no transactions, revert changes manually.
 - Real PostgreSQL DB from `.env` (no separate test DB, no sqlite) — `larbox:test` / `larbox:migrate` wipe it. `APP_ENV=testing`, `QUEUE_CONNECTION=sync`, `CACHE_STORE=array`, `MAIL_MAILER=array`, `APP_DEBUG=false` (tests rely on the JSON error mapping).
-- CI: `.github/workflows/tests.yml` runs `larbox:test` on push / PR to `main` (PostgreSQL 14 service, own `.env` with `APP_ENV=local`, `php artisan serve` for the emulators; both run as root because `FileHelper` chowns uploads to `www-data`).
+- CI: `.github/workflows/tests.yml` runs `larbox:test` on push / PR to `main` (PHP 8.5, PostgreSQL 14 service with `pg_trgm` and separate history/telescope DBs, own `.env` with `APP_ENV=local`, `php artisan serve` for the emulators; both run as root because `FileHelper` chowns uploads to `www-data`).
 - `TESTING_SHOW_DETAILED_ERROR=true` prints the trace of a failed request and stops the run.
 
 ## Architecture notes
 
 - **DB connections**: `main` (default, incl. audit tables), `history` (only `history_store` / `StoreHttpLog`), `telescope`. Migrations are per-module, timestamp-less, applied only via `larbox:migrate` (`database/migrations/` holds only framework tables); FKs live in `<module>-relations.php` and run after seeders. Partitioning and indexes via `app/Helpers/Database`.
-- **Models**: no `$fillable` — every real column is fillable except `id`, `created_at`, `updated_at`, `deleted_at` and `$guarded` (column list cached under `db_schema`). Flags `$shouldHandleDailyLimit`, `$shouldSkipAutoFilters`; `$additionalConnections` joins other connections into `safely*()` transactions.
-- **Multi-tenancy**: models declare `$autoFilters` (`current_company`, `nested_companies`, `holding_companies`, `administered_companies`), applied in `Model::newQuery()`; skipped without a user or via `queryWithoutAutoFilters()`.
+- **Models**: Laravel config stays in properties (`$table`, `$connection`, `$primaryKey`, `$keyType`, `$incrementing`, `$timestamps`, `$hidden`, `$casts`) and `CREATED_AT`/`UPDATED_AT` consts — no PHP attributes (`#[Table]`, `#[Hidden]`, ...) and no `casts()` method (`Model::__construct` merges the properties; `#[Guarded]` would be ignored). No `$fillable` — every real column is fillable except `id`, `created_at`, `updated_at`, `deleted_at` and `$guarded` (column list cached under `db_schema`). Flags `$shouldHandleDailyLimit`, `$shouldSkipAutoFilters`; `$additionalConnections` joins other connections into `safely*()` transactions (no model sets it yet).
+- **Lazy loading**: `Model::preventLazyLoading()` is on in `local`/`testing` (`AppServiceProvider`) — relations read on collections must be eager-loaded (`with()`, `load()`, `loadMissing()`); it does not catch queries in loops on single models.
+- **Multi-tenancy**: models declare `$autoFilters` (`current_company`, `nested_companies`, `holding_companies`, `administered_companies`) on their own columns, applied in `Model::newQuery()`; skipped without a user or via `queryWithoutAutoFilters()`.
 - **Observers** are registered with `self::observe([...])` in model `booted()` (`RecordActionModelTrait` registers its own); params come from `observerParams()` (`daily_limit`, `sluggable`, `audit_record_action`).
 - **Persistence**: `safelySave()`, `safelyDelete()`, `safelyRestore()`, `safelyDBProcess()` (transaction-wrapped); related rows via `fillRelations(...)`. Domain processes (sale, purchase, stock) live in `modules/*/Services`.
-- **Locks**: only `DatabaseTransactionHelper::lock()` / `lockModel()` inside a transaction (released after commit/rollback); never `lockForUpdate()`.
-- **Business errors**: `modules/<Module>/Exceptions/<Entity>Exception extends BusinessException` with error constants; rendered as 400 `{message}`, not reported.
+- **Locks**: only `DatabaseTransactionHelper::lock()` / `lockModel()`, called inside `safelyDBProcess()` (released after commit/rollback, not enforced by the helper); never `lockForUpdate()`.
+- **Business errors**: `modules/<Module>/Exceptions/<Entity>Exception extends BusinessException` with error constants; rendered as 400 `{message}`, not reported. No `abort()` for errors — throw `NotFoundHttpException` (404), `ModelNotFoundException` (400), `AccessDeniedHttpException` (403).
 - **Requests**: result in `$validatedData`; `nonLocalizedRules()` / `localizedRules()`, `$defaults`, `$rawFields`, `additionalValidation()`; uploads via `$fileUploads` / `$imageUploads` (local or external storage, `config/integrations.php`). `ResourceFormRequest` returns 409 on stale `updated_at` (optimistic locking). Input escaped in `prepareForValidation()`.
-- **Enums**: `modules/*/Enums` are published to the frontend by `SystemController::enums()` (cache tag `system_public_data`).
-- **Excel**: import `phpoffice/phpspreadsheet`, export `avadim/fast-excel-writer`; sync up to the job's `$instantLimit`, otherwise queued (202, file delivered via notification); `$totalLimit` caps exports.
+- **Enums**: `modules/*/Enums` are published to the frontend by `SystemController` on the authenticated `common.system` route (nested `{Module: {Enum: ...}}`, cached per locale under tag `system_public_data`).
+- **Excel**: import `phpoffice/phpspreadsheet`, export `avadim/fast-excel-writer`. Export runs sync up to the job's `$instantLimit`, otherwise queued (202, file delivered via notification); `$totalLimit` caps exports. Import is always queued as `ExcelImportJob` chunks of 1000, locked per user by `user.is_excel_import_running`.
 - **PDF**: `App\Helpers\PdfHelper` (dompdf), PHP views in `modules/<Module>/PDF/`, `?format=pdf`. **Mail**: `MailHelper::send()` (queued on `mail`, views `modules/<Module>/Mail/<view>/<locale>.php`).
 - **Telegram**: `Integrations\Telegram\Helpers\TelegramHelper` over plain HTTP (MarkdownV2), queued `TelegramJob`.
 - **Integrations**: extend `App\Integration\IntegrationService` (relogin on 401/403/500, tokens in `Integration\Models\Token`, optional history in `History\Models\StoreHttpLog`). External file storage uses plain `Http`, not `IntegrationService`.
 - **Limits**: `Modules\System\Observers\DailyLimit`, `Modules\Company\Observers\Subscription`.
-- **Concurrency**: `ConcurrentWritesPreventionMiddleware` (409 on parallel writes, off in local/testing); `IdempotencyMiddleware` (`Idempotency-Key` on POST, replay header `Idempotent-Replayed`).
-- **Errors**: JSON, centralized in `bootstrap/app.php` (skipped when `APP_DEBUG`): 400/401/404/422/429, record not found → 400; in production any `QueryException` → 400 `Invalid input data type`, otherwise SQLSTATE `22003`, `22P02`, `23503` rewritten.
+- **Concurrency**: `ConcurrentWritesPreventionMiddleware` (429 via `ThrottleRequestsException` on parallel writes, off in local/testing); `IdempotencyMiddleware` (`Idempotency-Key` on POST, cached 600 s, replay header `Idempotent-Replayed`).
+- **Errors**: JSON, centralized in `bootstrap/app.php` (skipped when `APP_DEBUG`), all messages localized via `__()`: 400/401/403/404/422/429, record not found → 400; in production any `QueryException` → 400 `Неверные вводные данные`, otherwise SQLSTATE `22003`, `22P02`, `23503` rewritten; other exceptions keep `getStatusCode()` or 400.
 - **Rate limit**: `api` limiter (300/min prod, 1000/min otherwise, per user or IP), `auth` limiter for `common/auth` (5/min login, 3/min others, 10/h per username). `id`/`index`/`model` route params are digits only.
 - **Security**: secrets only from `.env` (never commit); Sanctum token check rejects users of soft-deleted companies (`AppServiceProvider`).
 
