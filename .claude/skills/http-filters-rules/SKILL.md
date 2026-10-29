@@ -9,27 +9,28 @@ Location: `http/<Area>/<Module>/Filters/<Entity>Filter.php`, namespace `Http\<Ar
 Canonical: `http/Company/Trade/Filters/SaleFilter.php`, `http/Company/Product/Filters/BrandFilter.php`, `http/Admin/Company/Filters/CompanyFilter.php`.
 
 ## How it is applied (`App\Controllers\ResourceController`)
-- `process()` runs on `$this->search->query` (index, show, restore, custom actions using it) and inside `Route::bind('model')` for every `{model}` route (update, delete, custom `{model}` actions, `ResourceFormRequest::$model`). Foreign records are unreachable by id.
+- Constructor middleware: `$this->filter->process($this->search->query)` — return value ignored; covers index, show, restore and custom actions using `$this->search->query`.
+- `resolveRouteModel()` (called by the global `Route::bind('model')` in `AppServiceProvider`): `$this->filter->process($this->model->query())->where(<key>, $value)->firstOrFail()` — return value used; covers update, delete, custom `{model}` actions and `ResourceFormRequest::$model`. Foreign records → 400 «Запись не найдена».
+- So `process()` must modify the given builder in place **and** return it; never clone or build a new query. It runs twice on `{model}` requests — keep it stateless.
 - Not applied to `$this->model->query()` or `X::query()` in custom code (`NestedSetController::tree/move`) — only model `$autoFilters` apply there.
-- The list call ignores the return value → `process()` must modify the given builder in place and return it; never clone or build a new query.
-- It narrows model `$autoFilters` (`App\Base\Model::newQuery()`): Product/Stock/Trade/Audit models auto-scope reads to `holding_companies` (`modules/Trade/Models/Sale.php`). `Company` and `User` have no auto filters — their Filters are the only scoping.
+- It narrows model `$autoFilters` (`App\Base\Model::newQuery()`, table-qualified `"$table.$field"`, skipped without a user): Product/Stock/Trade/Audit/Seo models auto-scope to `holding_companies` (`modules/Trade/Models/Sale.php`), `Product\Models\Price` to `current_company`. `Company` and `User` have no auto filters — their Filters are the only scoping.
 - Client filtering/sorting (`?filter[...]`, `?sort[...]`) belongs to Search classes (`Modules\<Module>\Search`), not Filters.
 
 ## Rules
 - One Filter per resource controller, named after the controller entity (`EmployeeFilter` for `EmployeeController` over `User`), passed as `filter: new <Entity>Filter()`.
 - Only `public function process(Builder $query): Builder`, typed with `Illuminate\Database\Eloquent\Builder`; return the chain.
-- Scope only with `App\Base\EloquentBuilder` methods (`app/Base/EloquentBuilder/EloquentBuilderFilterByUserTrait.php`, `EloquentBuilderFilterByPermissionsTrait.php`):
-  - `filterByNestedCompanies(path = 'company_id')` — director/employee: own company + children; admins unrestricted. Default for the Company area (`Company/Trade/Filters/*`, `Company/Audit/Filters/RecordActionFilter.php`).
+- Scope only with `App\Base\EloquentBuilder` methods (`app/Base/EloquentBuilder/EloquentBuilderFilterByUserTrait.php`, `EloquentBuilderFilterByPermissionsTrait.php`); company scopes leave admins unrestricted and filter director/employee by ids:
+  - `filterByNestedCompanies(path = 'company_id')` — own company + children. Default for the Company area (`Company/Trade/Filters/*`, `Company/Stock/Filters/ProductFilter.php`, `Company/Audit/Filters/RecordActionFilter.php`).
   - `filterByCurrentCompany(path)` — own company only (`Company/User/Filters/RoleFilter.php`).
-  - `filterByHoldingCompanies(path)` — parent holding + its children (used by `$autoFilters`, `NestedSetEloquentBuilder`; no Filter needs it).
-  - `filterByAdministeredCompanies(path)` — Admin area: admins limited to responsible companies + children; superadmin and company users unrestricted (`Admin/Company/Filters/CompanyFilter.php`).
-  - `filterByUser(field)` — personal records (`Common/User/Filters/NotificationFilter.php` → `'recipient_id'`); `filterByCreator(fields = 'creator_id')`.
-  - `filterByOwnRecords(RolePermissionHelper::ROUTE_<AREA>_<MODULE>_<ENTITY>, fields = 'creator_id')` — creator-only unless the role has `<route>.permission-all-records` (`BrandFilter`); requires the pseudo-route and const (see http-routes-rules).
-- Path: `'id'` when filtering the companies table itself (`Company/Company/Filters/CompanyFilter.php`, Admin `CompanyFilter`); table-qualified when the Search joins (`Company/Stock/Filters/StockFilter.php` → `'stock.company_id'`); `'relation->company_id'` filters through `whereHas`.
+  - `filterByHoldingCompanies(path)` — parent holding + its children (used by `$autoFilters` and `NestedSetEloquentBuilder`; no Filter needs it).
+  - `filterByAdministeredCompanies(path)` — Admin area: admins limited to `administeredCompanyIds()`; superadmin and company users unrestricted (`Admin/Company/Filters/CompanyFilter.php`).
+  - `filterByUser(field)` — personal records (`Common/User/Filters/NotificationFilter.php` → `'recipient_id'`); `filterByCreator(fields = 'creator_id')` — OR over fields.
+  - `filterByOwnRecords(RolePermissionHelper::ROUTE_<AREA>_<MODULE>_<ENTITY>, fields = 'creator_id')` — creator-only unless `RoleHelper::canAccessRoute()` grants `<route>.permission-all-records` (`BrandFilter`); requires the pseudo-route and const (see http-routes-rules).
+- Path: `'id'` when filtering the companies table itself (`Company/Company/Filters/CompanyFilter.php`, Admin `CompanyFilter`); table-qualified when the Search joins (`Company/Stock/Filters/StockFilter.php` → `'stock.company_id'`); `'relation->company_id'` filters through `whereHas` (supported, no usage yet).
 - Fixed type constraints belong here: `->where('type', UserTypeEnum::COMPANY_EMPLOYEE->value)` (`EmployeeFilter`, Company `RoleFilter`), `->whereIn('type', [...])` (`Admin/User/Filters/RoleFilter.php`).
-- Shared catalogs (readable across the holding, writable only by own companies) scope non-read actions only: `->when(!in_array(request()->route()->getActionMethod(), ['index', 'show']), function ($q) { $q->filterByNestedCompanies(); })` (`Company/Product/Filters/ProductFilter.php`, `OptionFilter`, `SpecificationFilter`); list extra read actions (`'tree'` in `CategoryFilter`). Combine with other scopes before `->when()` (`BrandFilter`).
-- Role/action-dependent eager loading is allowed: `$query->when(user()->getService()->isSuperadmin() && ..., function ($q) { $q->with(['credential']); });` then `return $query->filterBy...()` (Admin `CompanyFilter`).
-- Every Company-area resource controller has a Filter; omit it only for global or superadmin-only Admin data (`SubscriptionController`, `LanguageController`, `UserController`, `StoreHttpLogController`).
+- Shared catalogs (readable across the holding via `$autoFilters`, writable only by own companies) scope non-read actions only: `->when(!in_array(request()->route()->getActionMethod(), ['index', 'show']), function ($q) { $q->filterByNestedCompanies(); })` (`Company/Product/Filters/ProductFilter.php`, `OptionFilter`, `SpecificationFilter`); list extra read actions (`'tree'` in `CategoryFilter`). Combine with other scopes before `->when()` (`BrandFilter`).
+- Role/action-dependent eager loading is allowed: `$query->when(user()->getService()->isSuperadmin() && !in_array(request()->route()->getActionMethod(), ['index', 'show']), function ($q) { $q->with(['credential']); });` then `return $query->filterBy...()` (Admin `CompanyFilter`).
+- Every Company-area resource controller has a Filter; omit it only for global or superadmin-only Admin data (`SubscriptionController`, `LanguageController`, `UserController`, `StoreHttpLogController`, Admin `NotificationController`).
 - Closures inside `when()` are multiline `function ($q) { ... }`, matching existing Filters.
 
 ## Template
@@ -68,4 +69,4 @@ Write-only scoping (shared catalog):
 - Don't write raw `where('company_id', user()->company_id)` / `whereIn(..., nestedCompanyIds())` — `filterBy*()` handle every user type.
 - Don't add constructors, properties or extra methods; don't share one Filter across controllers or areas.
 - Don't scope in the controller instead of a Filter — the `{model}` binding would leak foreign records.
-- Don't call `queryWithoutAutoFilters()` (zero usages in the codebase).
+- Don't call `queryWithoutAutoFilters()` (zero usages outside `App\Base\Model`).

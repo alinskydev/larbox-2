@@ -31,7 +31,7 @@ class DownloadTest extends _TestCase
     {
         $this->sendRequest(
             path: '1/download',
-            assertStatus: 404,
+            assertStatus: 400,
         );
     }
 }

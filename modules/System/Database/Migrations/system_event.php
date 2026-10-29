@@ -19,7 +19,6 @@ return new class() extends Migration
             $table->string('project');
             $table->enum('type', EventTypeEnum::values());
             $table->jsonb('additional')->default('[]');
-            $table->bigInteger('user_id')->nullable();
             $table->timestamp('created_at')->index();
         });
     }

@@ -20,7 +20,7 @@ abstract class IntegrationService
     public array $requestBody;
 
     public array $additionalData = [];
-    public array $forcedLoginStatuses = [401, 403, 500];
+    protected array $forcedLoginStatuses = [401, 403, 500];
 
     public function __construct(?Company $company = null)
     {

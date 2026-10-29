@@ -3,6 +3,7 @@
 namespace Modules\User\Helpers\Role;
 
 use Illuminate\Support\Facades\Route;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class RolePermissionHelper
 {
@@ -12,6 +13,7 @@ class RolePermissionHelper
 
     public static function registerAllRecordsRoute(): void
     {
-        Route::get(static::PERMISSION_ALL_RECORDS, fn() => abort(404))->name(static::PERMISSION_ALL_RECORDS);
+        Route::get(static::PERMISSION_ALL_RECORDS, fn() => throw new NotFoundHttpException())
+            ->name(static::PERMISSION_ALL_RECORDS);
     }
 }

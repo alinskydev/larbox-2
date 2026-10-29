@@ -14,7 +14,7 @@ class CreateFileForDeployCommand extends Command
     public function handle(): void
     {
         $path = base_path('app/Console/Commands/Deploy');
-        File::makeDirectory($path, 0777, true, true);
+        File::makeDirectory($path, 0755, true, true);
 
         file_put_contents(
             "$path/" . date('Y_m_d__H_i_s') . '.php',

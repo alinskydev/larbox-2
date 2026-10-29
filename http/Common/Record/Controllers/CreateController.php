@@ -14,6 +14,7 @@ use Modules\Product\Models\Brand;
 use Modules\Product\Models\Option;
 use Modules\Product\Models\Specification;
 use Modules\User\Enums\UserTypeEnum;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class CreateController extends Controller
 {
@@ -118,10 +119,12 @@ class CreateController extends Controller
                 ],
                 isAccessible: UserTypeEnum::isCompanyType(user()->type),
             ),
-            default => abort(404),
+            default => throw new NotFoundHttpException(),
         };
 
-        if (!$params->isAccessible) abort(404);
+        if (!$params->isAccessible) {
+            throw new NotFoundHttpException();
+        }
 
         return $params;
     }

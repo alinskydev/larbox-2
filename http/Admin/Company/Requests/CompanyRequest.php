@@ -101,6 +101,7 @@ class CompanyRequest extends ResourceFormRequest
     {
         if ($this->model->exists && $this->parent_id && $this->model->children()->exists()) {
             $this->validator->errors()->add('parent_id', __('Максимальный уровень вложенности: 2'));
+            return;
         }
     }
 

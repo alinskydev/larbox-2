@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Modules\User\Enums\UserTypeEnum;
 use Modules\User\Models\Role;
 use Modules\User\Models\User;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class RoleHelper
 {
@@ -103,7 +104,9 @@ class RoleHelper
     {
         $userRoutes = $user->getService()->allRoleRoutes();
 
-        if (!$userRoutes) abort(403);
+        if (!$userRoutes) {
+            throw new AccessDeniedHttpException();
+        }
 
         $isCorrectRoutePrefix = match (true) {
             Str::startsWith($route, 'admin.') => UserTypeEnum::isAdminType($user->type),
