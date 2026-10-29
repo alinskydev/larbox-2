@@ -25,7 +25,7 @@ class ExcelImportFormRequest extends FormRequest
     {
         parent::__construct();
 
-        if (user()->company?->is_excel_import_running) {
+        if (user()->is_excel_import_running) {
             throw new \Exception(__('У вас есть активный процесс по импорту'));
         }
     }
@@ -122,6 +122,6 @@ class ExcelImportFormRequest extends FormRequest
             $this->failedValidation($this->validator);
         }
 
-        user()->company?->updateQuietly(['is_excel_import_running' => true]);
+        user()->updateQuietly(['is_excel_import_running' => true]);
     }
 }

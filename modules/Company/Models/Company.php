@@ -24,7 +24,6 @@ use Modules\User\Models\User;
  * @property string $name
  * @property ?string|array $logo
  * @property string $address
- * @property bool $is_excel_import_running
  * @property string $created_at
  * @property string $updated_at
  *

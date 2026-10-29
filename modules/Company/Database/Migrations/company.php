@@ -21,7 +21,6 @@ return new class() extends Migration
             $table->string('name');
             $table->string('logo')->nullable();
             $table->string('address');
-            $table->boolean('is_excel_import_running')->default(false);
             $table->timestamp('created_at')->index();
             $table->timestamp('updated_at');
             $table->softDeletes();

@@ -23,6 +23,7 @@ return new class() extends Migration
             $table->string('username')->unique();
             $table->string('password');
             $table->string('phone', 20)->nullable()->index();
+            $table->boolean('is_excel_import_running')->default(false);
             $table->timestamp('created_at')->index();
             $table->timestamp('updated_at');
             $table->softDeletes();

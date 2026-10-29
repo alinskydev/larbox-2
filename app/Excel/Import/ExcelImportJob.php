@@ -77,7 +77,7 @@ class ExcelImportJob extends Job
             );
         } finally {
             if ($this->isLast) {
-                user()->company->updateQuietly(['is_excel_import_running' => false]);
+                user()->updateQuietly(['is_excel_import_running' => false]);
 
                 NotificationHelper::insertMultiple(
                     recipientIds: [$this->userId],

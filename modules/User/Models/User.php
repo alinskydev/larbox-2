@@ -30,6 +30,7 @@ use Modules\User\Services\UserService;
  * @property string $username
  * @property string $password
  * @property ?string $phone
+ * @property bool $is_excel_import_running
  * @property string $created_at
  * @property string $updated_at
  *
