@@ -48,18 +48,15 @@ class Category extends Model
 
     protected $table = 'product_category';
 
+    protected $casts = [
+        'name' => 'array',
+    ];
+
     public string $resourceClass = CategoryResource::class;
 
     protected array $autoFilters = [
         'holding_companies' => ['company_id'],
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'name' => 'array',
-        ];
-    }
 
     public function observerParams(): array
     {

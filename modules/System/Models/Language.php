@@ -20,12 +20,9 @@ class Language extends Model
 {
     protected $table = 'system_language';
 
-    protected function casts(): array
-    {
-        return [
-            'image' => AsImage::class . ':scaleDown_25|scaleDown_100|scaleDown_500',
-        ];
-    }
+    protected $casts = [
+        'image' => AsImage::class . ':scaleDown_25|scaleDown_100|scaleDown_500',
+    ];
 
     protected static function booted(): void
     {

@@ -23,16 +23,13 @@ class Price extends Model
 
     protected $table = 'product_price';
 
+    protected $casts = [
+        'price' => 'float',
+    ];
+
     protected array $autoFilters = [
         'current_company' => ['company_id'],
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'price' => 'float',
-        ];
-    }
 
     public function company(): BelongsTo
     {

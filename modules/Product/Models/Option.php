@@ -31,16 +31,13 @@ class Option extends Model
 {
     protected $table = 'product_option';
 
+    protected $casts = [
+        'name' => 'array',
+    ];
+
     protected array $autoFilters = [
         'holding_companies' => ['company_id'],
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'name' => 'array',
-        ];
-    }
 
     public function observerParams(): array
     {

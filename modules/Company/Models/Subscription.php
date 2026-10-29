@@ -24,12 +24,9 @@ class Subscription extends Model
 {
     protected $table = 'company_subscription';
 
-    protected function casts(): array
-    {
-        return [
-            'record_limits' => 'array',
-        ];
-    }
+    protected $casts = [
+        'record_limits' => 'array',
+    ];
 
     public function observerParams(): array
     {

@@ -27,18 +27,15 @@ class PurchaseProduct extends Model
 
     protected $table = 'trade_purchase_product';
 
+    protected $casts = [
+        'purchase_price' => 'float',
+        'sale_price' => 'float',
+        'quantity' => 'float',
+    ];
+
     protected array $autoFilters = [
         'holding_companies' => ['company_id'],
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'purchase_price' => 'float',
-            'sale_price' => 'float',
-            'quantity' => 'float',
-        ];
-    }
 
     public function company(): BelongsTo
     {

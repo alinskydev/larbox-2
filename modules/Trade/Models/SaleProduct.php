@@ -32,20 +32,17 @@ class SaleProduct extends Model
 
     protected $table = 'trade_sale_product';
 
+    protected $casts = [
+        'purchase_price' => 'float',
+        'sale_price' => 'float',
+        'sold_quantity' => 'float',
+        'returned_quantity' => 'float',
+        'product_snapshot' => 'array',
+    ];
+
     protected array $autoFilters = [
         'holding_companies' => ['company_id'],
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'purchase_price' => 'float',
-            'sale_price' => 'float',
-            'sold_quantity' => 'float',
-            'returned_quantity' => 'float',
-            'product_snapshot' => 'array',
-        ];
-    }
 
     public function company(): BelongsTo
     {

@@ -28,17 +28,14 @@ class Product extends Model
 
     protected $table = 'stock_product';
 
+    protected $casts = [
+        'purchase_price' => 'float',
+        'quantity' => 'float',
+    ];
+
     protected array $autoFilters = [
         'holding_companies' => ['company_id'],
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'purchase_price' => 'float',
-            'quantity' => 'float',
-        ];
-    }
 
     public function company(): BelongsTo
     {

@@ -21,17 +21,14 @@ class Meta extends Model
 
     public $timestamps = false;
 
+    protected $casts = [
+        'value' => 'array',
+        'parsed_value' => 'array',
+    ];
+
     protected array $autoFilters = [
         'holding_companies' => ['company_id'],
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'value' => 'array',
-            'parsed_value' => 'array',
-        ];
-    }
 
     public function seo_metable(): MorphTo
     {

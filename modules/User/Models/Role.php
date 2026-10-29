@@ -32,14 +32,11 @@ class Role extends Model
 {
     protected $table = 'user_role';
 
-    public string $resourceClass = RoleResource::class;
+    protected $casts = [
+        'routes' => 'array',
+    ];
 
-    protected function casts(): array
-    {
-        return [
-            'routes' => 'array',
-        ];
-    }
+    public string $resourceClass = RoleResource::class;
 
     public function observerParams(): array
     {

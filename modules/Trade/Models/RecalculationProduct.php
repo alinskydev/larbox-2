@@ -31,16 +31,13 @@ class RecalculationProduct extends Model
 
     protected $table = 'trade_recalculation_product';
 
+    protected $casts = [
+        'price' => 'float',
+    ];
+
     protected array $autoFilters = [
         'holding_companies' => ['company_id'],
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'price' => 'float',
-        ];
-    }
 
     public function observerParams(): array
     {

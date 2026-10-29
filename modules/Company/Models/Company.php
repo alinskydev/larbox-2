@@ -41,12 +41,9 @@ class Company extends Model
 
     protected $table = 'company';
 
-    protected function casts(): array
-    {
-        return [
-            'logo' => AsImage::class . ':scaleDown_25|scaleDown_100|scaleDown_500',
-        ];
-    }
+    protected $casts = [
+        'logo' => AsImage::class . ':scaleDown_25|scaleDown_100|scaleDown_500',
+    ];
 
     public function observerParams(): array
     {

@@ -28,15 +28,12 @@ class Credential extends Model
         'company_id',
     ];
 
-    public string $resourceClass = CredentialResource::class;
+    protected $casts = [
+        'telegram_chats' => 'array',
+        'store' => 'encrypted:array',
+    ];
 
-    protected function casts(): array
-    {
-        return [
-            'telegram_chats' => 'array',
-            'store' => 'encrypted:array',
-        ];
-    }
+    public string $resourceClass = CredentialResource::class;
 
     public function company(): BelongsTo
     {
