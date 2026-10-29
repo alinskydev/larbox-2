@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\Facades\App;
+use Laravel\Telescope\EntryType;
 use Laravel\Telescope\IncomingEntry;
 use Laravel\Telescope\Telescope;
 use Laravel\Telescope\TelescopeApplicationServiceProvider;
@@ -29,6 +30,16 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
                 $entry->isScheduledTask() ||
                 $entry->isSlowQuery() ||
                 $entry->hasMonitoredTag();
+        });
+
+        Telescope::afterRecording(function (Telescope $telescope, IncomingEntry $entry) {
+            if ($entry->type !== EntryType::COMMAND) return;
+
+            $duration = defined('LARAVEL_START') ? floor((microtime(true) - LARAVEL_START) * 1000) : 0;
+            $memoryUsage = round(memory_get_peak_usage(true) / 1024 / 1024, 1);
+
+            $entry->content['options']['duration'] = "$duration ms";
+            $entry->content['options']['memory_usage'] = "$memoryUsage MB";
         });
     }
 
