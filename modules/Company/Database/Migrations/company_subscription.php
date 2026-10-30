@@ -23,8 +23,6 @@ return new class() extends Migration
             $table->timestamp('created_at')->index();
             $table->timestamp('updated_at');
         });
-
-        DatabaseMigrationIndexHelper::createGinIndex('company_subscription', 'record_limits', 'jsonb_path_ops');
     }
 
     /**
