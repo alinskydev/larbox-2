@@ -124,6 +124,7 @@ class IndexController extends Controller
                     }),
                 field: 'full_text',
                 additionalFields: [
+                    'company_id',
                     'parent_id',
                     'category_id',
                     'brand_id',
