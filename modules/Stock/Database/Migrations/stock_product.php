@@ -1,5 +1,6 @@
 <?php
 
+use App\Helpers\Database\DatabaseMigrationIndexHelper;
 use App\Helpers\Database\DatabaseMigrationPartitionHelper;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -30,6 +31,12 @@ return new class() extends Migration
                     $table->unique(['company_id', 'batch_id', 'product_id']);
                 });
             },
+        );
+
+        DatabaseMigrationIndexHelper::createConstraint(
+            table: 'stock_product',
+            name: 'stock_product_quantity_check',
+            definition: 'CHECK (quantity >= 0)',
         );
     }
 

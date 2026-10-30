@@ -43,4 +43,9 @@ class DatabaseMigrationIndexHelper
             DB::statement("CREATE INDEX $name ON \"$table\" USING gin (($field->>'$language') gin_trgm_ops)");
         }
     }
+
+    public static function createConstraint(string $table, string $name, string $definition): void
+    {
+        DB::statement("ALTER TABLE \"$table\" ADD CONSTRAINT $name $definition");
+    }
 }
