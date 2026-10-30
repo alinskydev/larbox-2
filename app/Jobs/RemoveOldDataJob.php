@@ -26,7 +26,6 @@ class RemoveOldDataJob extends Job
                 ->table($this->table)
                 ->where('created_at', '<', date('Y-m-d 00:00:00', strtotime($this->period)))
                 ->when($this->additionalQuery, function ($query) {
-                    // $query->where(($this->additionalQuery)($query));
                     $closure = $this->additionalQuery->getClosure();
                     $query->where($closure($query));
                 });
