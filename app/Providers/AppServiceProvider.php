@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use App\Base\Application;
 use App\Controllers\ResourceController;
+use App\Helpers\Database\DatabaseQueryCheckHelper;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Routing\Route;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route as RouteFacede;
 use Illuminate\Support\Facades\Schema;
@@ -38,8 +40,12 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->registerDeprecationHandler();
 
+        if ($this->app->environment(['local', 'testing'])) {
+            Model::preventLazyLoading();
+            DB::listen(fn($query) => DatabaseQueryCheckHelper::checkPartitions($query));
+        }
+
         Schema::defaultStringLength(255);
-        Model::preventLazyLoading($this->app->environment(['local', 'testing']));
         SerializableClosure::setSecretKey(config('app.key'));
 
         Password::defaults(function () {

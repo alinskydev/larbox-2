@@ -15,10 +15,10 @@ class DatabaseMigrationIndexHelper
         DB::statement("CREATE INDEX $name ON \"$table\" ($columns)");
     }
 
-    public static function createGinIndex(string $table, string $field): void
+    public static function createGinIndex(string $table, string $field, string $operatorClass = 'gin_trgm_ops'): void
     {
         $name = "{$table}_{$field}_gin_index";
-        DB::statement("CREATE INDEX $name ON \"$table\" USING gin ($field gin_trgm_ops)");
+        DB::statement("CREATE INDEX $name ON \"$table\" USING gin ($field $operatorClass)");
     }
 
     public static function createLocalizedLowerIndex(string $table, string $field, ?string $scopeField = null): void
@@ -42,5 +42,10 @@ class DatabaseMigrationIndexHelper
             $name = "{$table}_{$field}_localized_{$language}_gin_index";
             DB::statement("CREATE INDEX $name ON \"$table\" USING gin (($field->>'$language') gin_trgm_ops)");
         }
+    }
+
+    public static function createConstraint(string $table, string $name, string $definition): void
+    {
+        DB::statement("ALTER TABLE \"$table\" ADD CONSTRAINT $name $definition");
     }
 }

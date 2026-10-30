@@ -29,7 +29,11 @@ class StockController extends ResourceController
 
         $data['summary'] = $this->search->query
             ->cloneForSummary()
-            ->leftJoin('stock_product', 'stock_product.stock_id', '=', 'stock.id')
+            ->leftJoin('stock_product', function ($join) {
+                $join
+                    ->on('stock_product.stock_id', '=', 'stock.id')
+                    ->on('stock_product.company_id', '=', 'stock.company_id');
+            })
             ->select(DB::raw('coalesce(sum(stock_product.quantity), 0) as product_quantity'))
             ->getQuery()
             ->first();
