@@ -3,6 +3,7 @@
 namespace App\Console\Commands\App;
 
 use Illuminate\Console\Command;
+use Modules\Product\Models\Product;
 
 class RunCommand extends Command
 {
@@ -12,6 +13,10 @@ class RunCommand extends Command
 
     public function handle(): void
     {
-        setUser(2);
+        setUser(1);
+
+        Product::query()
+            ->getQuery()
+            ->get();
     }
 }
