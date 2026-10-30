@@ -139,8 +139,12 @@ class PostmanTestCase extends BaseTestCase
                     exit;
                 }
 
-                $content = json_encode(json_decode($response->getContent()), JSON_UNESCAPED_UNICODE);
-                $response->setContent($content);
+                $content = json_encode(
+                    json_decode($response->getContent()),
+                    JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
+                );
+
+                $response->setContent(stripcslashes($content));
 
                 throw new \Exception($response);
             }

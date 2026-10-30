@@ -13,9 +13,9 @@ class RunCommand extends Command
 
     public function handle(): void
     {
-        setUser(1);
+        setUser(2);
 
-        Product::query()
+        Product::queryWithoutAutoFilters()
             ->getQuery()
             ->get();
     }

@@ -28,7 +28,13 @@ class DatabaseQueryCheckHelper
                         $source = static::source();
                         $sql = $query->toRawSql();
 
-                        throw new \Exception("Query on partitioned table \"$table\" has no condition on \"$name.$key\" in $source: $sql");
+                        throw new \Exception(implode(PHP_EOL, [
+                            'Query on partitioned table has no partition key condition',
+                            "Table: $table",
+                            "Missing condition: $name.$key",
+                            "Source: $source",
+                            "SQL: $sql",
+                        ]));
                     }
                 }
             }
