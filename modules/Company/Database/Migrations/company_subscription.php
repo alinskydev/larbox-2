@@ -1,5 +1,6 @@
 <?php
 
+use App\Helpers\Database\DatabaseMigrationIndexHelper;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -22,6 +23,8 @@ return new class() extends Migration
             $table->timestamp('created_at')->index();
             $table->timestamp('updated_at');
         });
+
+        DatabaseMigrationIndexHelper::createGinIndex('company_subscription', 'record_limits', 'jsonb_path_ops');
     }
 
     /**
