@@ -10,7 +10,7 @@ use Modules\Company\Models\Company;
 use Modules\Product\Models\Product;
 use Modules\System\Observers\DailyLimit\DailyLimitCreateObserver;
 use Modules\Trade\Observers\RecalculationProductObserver;
-use Modules\Trade\Services\RecalculationProductService;
+use Modules\Trade\Services\RecalculationProduct\RecalculationProductService;
 use Modules\User\Models\User;
 
 /**

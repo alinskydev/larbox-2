@@ -4,7 +4,7 @@ namespace Modules\User\Models;
 
 use App\Base\Model;
 use Modules\User\Observers\AuthCodeObserver;
-use Modules\User\Services\AuthCodeService;
+use Modules\User\Services\AuthCode\AuthCodeService;
 
 /**
  * @property string $username

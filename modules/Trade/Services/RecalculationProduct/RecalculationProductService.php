@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Trade\Services;
+namespace Modules\Trade\Services\RecalculationProduct;
 
 use App\Base\ModelService;
 use Modules\Product\Models\Price;

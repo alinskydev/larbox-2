@@ -5,8 +5,8 @@ description: Mandatory standards for model services in modules/*/Services (exten
 
 # Services Rules
 
-Location: `modules/<Module>/Services/<Entity>Service.php` (secondary: `Services/<Feature>/<Feature><Action>Service.php`), namespace `Modules\<Module>\Services[\<Feature>]`, base `App\Base\ModelService` (`__construct(protected Model $model)`, `checkAndGetObserverParams(string $key)`). `App\Base\Model::getService()` returns a plain `ModelService`, so every model has one for observer params.
-Canonical: `modules/Trade/Services/SaleService.php`, `modules/Trade/Services/PurchaseService.php`, `modules/Stock/Services/StockService.php`, `modules/User/Services/UserService.php`. All services: these + `Trade/Services/RecalculationProductService.php`, `Product/Services/Product/ProductIntegrationService.php` (integration service: one public method per remote action `create()` / `update()` / `delete()` dispatching `AppIntegrationIntegrationJob`, exposed by `Product::getIntegrationService()`), `User/Services/AuthCodeService.php`, `Audit/Services/RecordAction/RecordActionCreateService.php`. External API clients (`integrations/*/Services`, `App\Integration\IntegrationService`) are not covered.
+Location: every service lives in a folder named after its model: `modules/<Module>/Services/<Entity>/<Entity>Service.php` (secondary: `Services/<Entity>/<Entity><Feature>Service.php`), namespace `Modules\<Module>\Services\<Entity>`, base `App\Base\ModelService` (`__construct(protected Model $model)`, `checkAndGetObserverParams(string $key)`). `App\Base\Model::getService()` returns a plain `ModelService`, so every model has one for observer params.
+Canonical: `modules/Trade/Services/Sale/SaleService.php`, `modules/Trade/Services/Purchase/PurchaseService.php`, `modules/Stock/Services/Stock/StockService.php`, `modules/User/Services/User/UserService.php`. All services: these + `Trade/Services/RecalculationProduct/RecalculationProductService.php`, `Product/Services/Product/ProductIntegrationService.php` (integration service: one public method per remote action `create()` / `update()` / `delete()` dispatching `App\Integration\IntegrationJob`, exposed by `Product::getIntegrationService()`), `User/Services/AuthCode/AuthCodeService.php`, `Audit/Services/RecordAction/RecordActionCreateService.php`. External API clients (`integrations/*/Services`, `App\Integration\IntegrationService`) are not covered.
 
 ## When a service
 - Logic bound to one model instance reused across layers: `UserService::isSuperadmin()`, `holdingCompanyIds()` (used by builders, middleware, requests, relations), `createNewAccessToken()`, `AuthCodeService::create()` / `verifyCode()`.
@@ -45,7 +45,7 @@ Canonical: `modules/Trade/Services/SaleService.php`, `modules/Trade/Services/Pur
 ```php
 <?php
 
-namespace Modules\<Module>\Services;
+namespace Modules\<Module>\Services\<Entity>;
 
 use App\Base\ModelService;
 use App\Helpers\Database\DatabaseTransactionHelper;

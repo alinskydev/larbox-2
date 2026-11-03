@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Company\Models\Company;
-use Modules\Stock\Services\StockService;
+use Modules\Stock\Services\Stock\StockService;
 use Modules\System\Observers\DailyLimit\DailyLimitCreateObserver;
 use Modules\User\Models\User;
 

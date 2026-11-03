@@ -33,7 +33,7 @@ Models live in `modules/<Module>/Models/<Name>.php`, namespace `Modules\<Module>
 - Lazy loading is prevented in local/testing (`Model::preventLazyLoading()` in `app/Providers/AppServiceProvider.php`): a relation read on models fetched as a collection throws `LazyLoadingViolationException`. Eager-load with `with()` / `load()` / `loadMissing()` (or Search `with[]`); lazy reads on a single model (observers, services) are fine.
 - Observers only in `protected static function booted(): void` via `self::observe([...])` (see observers-rules for order).
 - Accessors use `get<Name>Attribute()` (`Category::getLocalizedNameAttribute()`, `SeoMetaModelTrait::getSeoMetaAttribute()`).
-- Domain logic: `getService(): XService { return new XService($this); }`, `XService extends App\Base\ModelService` in `modules/<Module>/Services/` (`Purchase`, `Sale`, `Stock`, `RecalculationProduct`, `User`, `AuthCode`).
+- Domain logic: `getService(): XService { return new XService($this); }`, `XService extends App\Base\ModelService` in `modules/<Module>/Services/<Entity>/` (`Purchase`, `Sale`, `Stock`, `RecalculationProduct`, `User`, `AuthCode`); extra per-feature services next to it (`Services/Product/ProductIntegrationService.php` via `getIntegrationService()`).
 - Variant without audit/limits = subclass in `Models/<Model>/` overriding `booted()` and emptying `bootRecordActionModelTrait()` (`Product\Models\Product\ProductImport`).
 
 ## Builders (`modules/<Module>/Builders/<Model>Builder.php`)

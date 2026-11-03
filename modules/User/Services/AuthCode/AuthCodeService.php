@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\User\Services;
+namespace Modules\User\Services\AuthCode;
 
 use App\Base\ModelService;
 use Modules\User\Exceptions\AuthCodeException;
