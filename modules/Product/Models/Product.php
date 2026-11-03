@@ -17,6 +17,7 @@ use Modules\Audit\Traits\RecordActionModelTrait;
 use Modules\Company\Models\Company;
 use Modules\Company\Observers\Subscription\SubscriptionCheckLimitObserver;
 use Modules\Product\Observers\ProductObserver;
+use Modules\Product\Services\Product\ProductIntegrationService;
 use Modules\Seo\Traits\SeoMetaModelTrait;
 use Modules\Stock\Models\Product as StockProduct;
 use Modules\System\Observers\DailyLimit\DailyLimitCreateObserver;
@@ -134,6 +135,11 @@ class Product extends Model
     public function stock_products(): HasMany
     {
         return $this->hasMany(StockProduct::class, 'product_id');
+    }
+
+    public function getIntegrationService(): ProductIntegrationService
+    {
+        return new ProductIntegrationService($this);
     }
 
     protected static function booted(): void
