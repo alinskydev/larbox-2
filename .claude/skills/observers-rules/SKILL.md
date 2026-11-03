@@ -54,7 +54,7 @@ class <Model>Observer
 {
     public function saving(<Model> $model): void
     {
-        $model->full_text ??= $model->name;
+        $model->full_name ??= $model->name;
     }
 
     public function created(<Model> $model): void

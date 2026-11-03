@@ -99,11 +99,11 @@ class IndexController extends Controller
                         'category.ancestors',
                         'brand',
                     ])
-                    ->when(isset($this->filter['full_text_or_barcode']), function ($query) {
+                    ->when(isset($this->filter['full_name_or_barcode']), function ($query) {
                         $query->where(function ($q) {
                             $q
-                                ->whereIlike('full_text', $this->filter['full_text_or_barcode'])
-                                ->orWhere('barcode', $this->filter['full_text_or_barcode']);
+                                ->whereIlike('full_name', $this->filter['full_name_or_barcode'])
+                                ->orWhere('barcode', $this->filter['full_name_or_barcode']);
                         });
                     })
                     ->when(isset($this->filter['parent_id']), function ($query) {
@@ -122,7 +122,7 @@ class IndexController extends Controller
                                 });
                         });
                     }),
-                field: 'full_text',
+                field: 'full_name',
                 additionalFields: [
                     'company_id',
                     'parent_id',

@@ -47,7 +47,7 @@ class IndexTest extends _TestCase
             query: [
                 'format' => 'excel',
                 'excel_columns' => [
-                    'full_text',
+                    'full_name',
                     'company_id',
                     'category_id',
                     'brand_id',

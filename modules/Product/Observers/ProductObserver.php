@@ -9,7 +9,7 @@ class ProductObserver
 {
     public function saving(Product $model): void
     {
-        $model->full_text ??= $model->name;
+        $model->full_name ??= $model->name;
 
         if ($model->parent_id && (!$model->category_id || !$model->brand_id)) {
             $model->category_id ??= $model->parent->category_id;
@@ -47,10 +47,10 @@ class ProductObserver
         }
 
         $locale = app()->getLocale();
-        $fullText = implode(' | ', [$model->name, ...$model->options->pluck("name.$locale")]);
+        $fullName = implode(' | ', [$model->name, ...$model->options->pluck("name.$locale")]);
 
-        if ($model->full_text !== $fullText) {
-            $model->updateQuietly(['full_text' => $fullText]);
+        if ($model->full_name !== $fullName) {
+            $model->updateQuietly(['full_name' => $fullName]);
         }
     }
 

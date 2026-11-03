@@ -42,7 +42,7 @@ class ProductSearch extends Search
         'search' => [
             'condition' => SearchFilterConditionEnum::OR_WHERE,
             'filters' => [
-                'full_text' => SearchFilterTypeEnum::LIKE,
+                'full_name' => SearchFilterTypeEnum::LIKE,
                 'barcode' => SearchFilterTypeEnum::EQUAL_RAW,
             ],
         ],

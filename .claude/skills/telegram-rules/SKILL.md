@@ -72,7 +72,7 @@ class <Purpose>TelegramTemplate
         $locale = app()->getLocale();
 
         $data = [
-            '*Name:* ' => $model->full_text,
+            '*Name:* ' => $model->full_name,
             '*Category:* ' => $model->category->name[$locale] ?? '',
             '*Price:* ' => $model->price ? NumberHelper::formatAmountWithCurrency($model->price->price) : '',
         ];

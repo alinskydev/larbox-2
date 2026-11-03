@@ -30,7 +30,7 @@ use Modules\User\Models\User;
  * @property int $category_id
  * @property int $brand_id
  * @property string $name
- * @property string $full_text
+ * @property string $full_name
  * @property string $slug
  * @property ?string $description
  * @property string $barcode
@@ -78,7 +78,7 @@ class Product extends Model
                 'excluded' => ['image_list_thumbs', 'image_list_thumbs.*'],
                 'relations' => [
                     'belongsTo' => [
-                        'parent_id' => 'parent.full_text',
+                        'parent_id' => 'parent.full_name',
                         'brand_id' => 'brand.name',
                         'category_id' => 'category.name',
                     ],
