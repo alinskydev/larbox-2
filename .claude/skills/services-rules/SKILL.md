@@ -6,7 +6,7 @@ description: Mandatory standards for model services in modules/*/Services (exten
 # Services Rules
 
 Location: every service lives in a folder named after its model: `modules/<Module>/Services/<Entity>/<Entity>Service.php` (secondary: `Services/<Entity>/<Entity><Feature>Service.php`), namespace `Modules\<Module>\Services\<Entity>`, base `App\Base\ModelService` (`__construct(protected Model $model)`, `checkAndGetObserverParams(string $key)`). `App\Base\Model::getService()` returns a plain `ModelService`, so every model has one for observer params.
-Canonical: `modules/Trade/Services/Sale/SaleService.php`, `modules/Trade/Services/Purchase/PurchaseService.php`, `modules/Stock/Services/Stock/StockService.php`, `modules/User/Services/User/UserService.php`. All services: these + `Trade/Services/RecalculationProduct/RecalculationProductService.php`, `Product/Services/Product/ProductIntegrationService.php` (integration service: one public method per remote action `create()` / `update()` / `delete()` dispatching `App\Integration\IntegrationJob`, exposed by `Product::getIntegrationService()`), `User/Services/AuthCode/AuthCodeService.php`, `Audit/Services/RecordAction/RecordActionCreateService.php`. External API clients (`integrations/*/Services`, `App\Integration\IntegrationService`) are not covered.
+Canonical: `modules/Trade/Services/Sale/SaleService.php`, `modules/Trade/Services/Purchase/PurchaseService.php`, `modules/Stock/Services/Stock/StockService.php`, `modules/User/Services/User/UserService.php`. All services: these + `Trade/Services/RecalculationProduct/RecalculationProductService.php`, `Product/Services/Product/ProductIntegrationService.php` (integration service: one public method per remote action `create()` / `update()` / `delete()` dispatching `App\Integration\IntegrationJob` (`create()` first runs the synchronous `StoreProductService::ensureDailyLimit()` check), exposed by `Product::getIntegrationService()`), `User/Services/AuthCode/AuthCodeService.php`, `Audit/Services/RecordAction/RecordActionCreateService.php`. External API clients (`integrations/*/Services`, `App\Integration\IntegrationService`) are not covered.
 
 ## When a service
 - Logic bound to one model instance reused across layers: `UserService::isSuperadmin()`, `holdingCompanyIds()` (used by builders, middleware, requests, relations), `createNewAccessToken()`, `AuthCodeService::create()` / `verifyCode()`.
@@ -16,7 +16,7 @@ Canonical: `modules/Trade/Services/Sale/SaleService.php`, `modules/Trade/Service
 
 ## Rules
 - Extend `ModelService`; never add a constructor or static methods; class PHPDoc `@property <Entity> $model` (only the generic `RecordActionCreateService` omits it). Per-call state of a secondary service: private typed props set in `process()` (`RecordActionCreateService::$params`, `$type`).
-- One main service per model, exposed by overriding `getService()` with the narrowed return type, placed after relations and before `newEloquentBuilder()` / `booted()` (`Sale`, `Purchase`, `Stock`, `RecalculationProduct`, `User`, `AuthCode`). Secondary service: `get<Feature><Action>Service()` on the model/trait with one public `process(...)`.
+- One main service per model, exposed by overriding `getService()` with the narrowed return type, placed after relations and before `newEloquentBuilder()` / `booted()` (`Sale`, `Purchase`, `Stock`, `RecalculationProduct`, `User`, `AuthCode`). Secondary service: `get<Feature><Action>Service()` on the model/trait with one public `process(...)` (`getRecordActionCreateService()`), or `get<Feature>Service()` with one method per action (`Product::getIntegrationService()`).
 - Always call through the model: `$request->model->getService()->return($products, $transactions)` (`http/Company/Trade/Controllers/SaleController.php`), `$this->model->stock->getService()->takeProducts(...)` (service → service), `$model->getService()->createBatch()` (`PurchaseObserver`), `(new AuthCode())->getService()->create($username)` (`ResetPasswordController`). Never `new <Entity>Service(...)` outside the model.
 - Controllers read validated values into variables, then call (`$products = $request->validatedData['products'];`); observers trigger state-change processes (`PurchaseObserver::updating` on `COMPLETED`, `SaleObserver::saved` on `COMPLETED`).
 - Array inputs/outputs carry shape PHPDoc: `@param array<array{product_id: int, quantity: float}> $products`, `@return array<array{batch_id: int, ...}>` (`StockService::takeProducts`).
@@ -121,7 +121,7 @@ public function getService(): <Entity>Service
 
 ## Don't
 - Don't use `lockForUpdate()` / `sharedLock()` (zero usages) — only `DatabaseTransactionHelper::lock()` / `lockModel()`.
-- Don't use `DB::transaction()` / `DB::beginTransaction()` (only inside `ModelSafelyTrait`) — only `safelyDBProcess()` / `safely*()`.
+- Don't use `DB::transaction()` / `DB::beginTransaction()` (only inside `ModelSafelyTrait` and `DomainTestCase`) — only `safelyDBProcess()` / `safely*()`.
 - Don't call `lock()` / `lockModel()` outside a transaction.
 - Don't trust `$this->model` attributes for state checks after taking a lock; re-query.
 - Don't iterate a collection and touch unloaded relations (lazy-loading violation in local/testing); don't query inside loops.

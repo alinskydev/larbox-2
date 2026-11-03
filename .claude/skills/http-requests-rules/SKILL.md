@@ -35,7 +35,7 @@ Canonical: `http/Company/Product/Requests/ProductRequest.php`, `http/Company/Tra
 - Request logic shared by areas lives in `modules/<Module>/Requests/<Entity>Request.php` (only `Modules\User\Requests\RoleRequest`); area requests `use ... as BaseRoleRequest`, merge `...parent::nonLocalizedRules()` and call its protected helpers (`http/Admin/User/Requests/RoleRequest.php`, `http/Company/User/Requests/RoleRequest.php`).
 - Excel import: extend `ExcelImportFormRequest`, set `$excelColumns`, call `checkAndPrepareExcel(lastColumn:, rowLimit:)` and `validateExcelRow(record:, rules:, errorMessages:, row:)` in `additionalValidation()`; the controller reads `$request->fileContent` (`ProductExcelImportProcessRequest`).
 - Messages are Russian via `__('...')`; attribute labels come from `__('fields.<field>')` (`FormRequest::attributes()`, locale suffix stripped).
-- Custom rules: `app/Rules/<Name>Rule.php` extends `App\Base\Rule` (implements `ValidationRule`), implements `passes(string $attribute, mixed $value): bool`, sets translated `$this->errorMessage`; dependencies as promoted `private` constructor params (`ExistsWithOldRule`, `UniqueRule`, `PhoneRule`).
+- Custom rules: `app/Rules/<Name>Rule.php` extends `App\Base\Rule` (implements `ValidationRule`), implements `passes(string $attribute, mixed $value): bool`, sets translated `$this->errorMessage`; dependencies as promoted `private` constructor params (`ExistsWithOldRule`, `UniqueRule`; `PhoneRule` has none).
 
 ## Template
 ```php

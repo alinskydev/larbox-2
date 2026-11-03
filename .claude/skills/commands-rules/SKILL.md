@@ -9,7 +9,7 @@ Location: `app/Console/Commands/<Group>/<Name>Command.php`, namespace `App\Conso
 Canonical: `app/Console/Commands/App/ProcessDBDailyCommand.php`, `app/Console/Commands/Larbox/DeployCommand.php`, `app/Console/Commands/Larbox/CreateFileForDeployCommand.php`.
 
 ## Groups
-- `App/` — project commands, prefix `app:`: `app:process_db_daily`, `app:remove_idle_db_connections` (scheduled), `app:run` (`RunCommand`, scratch "Run any script", body is `setUser(2);`).
+- `App/` — project commands, prefix `app:`: `app:process_db_daily`, `app:remove_idle_db_connections` (scheduled), `app:run` (`RunCommand`, scratch "Run any script", body starts with `setUser(2);`).
 - `Larbox/` — starter-kit tooling, prefix `larbox:`: `migrate`, `test`, `deploy`, `create_file_for_deploy`, `collect_translations`, `export_postman_collection`.
 - `Examples/` — demo commands, prefix `examples:` (`send_company_products_by_telegram`, `test_file_upload_security`); disabled by `$this->error('This command is disabled and cannot be executed.'); return;` as the first lines of `handle()`.
 - `Deploy/` — not commands: one-time scripts created by `larbox:create_file_for_deploy`, run by `larbox:deploy` (directory is created on demand, absent now).
@@ -27,7 +27,7 @@ Canonical: `app/Console/Commands/App/ProcessDBDailyCommand.php`, `app/Console/Co
 - Format: `Schedule::command('<signature>')->cron('<expr>')->runInBackground()->withoutOverlapping()->onOneServer();`
 - Current: `app:process_db_daily` at `1 0 * * *`, `app:remove_idle_db_connections` at `1 * * * *`, `telescope:prune --hours=48` `->daily()->withoutOverlapping()->onOneServer()` inside `if (App::environment('local'))`.
 - `app:process_db_daily`: per-table chains of `RemoveOldDataJob` / `ProcessDBJob` (`vacuum`, `reindex index concurrently <table>_pkey`) — `audit_error_log` (1 day), `audit_record_action` (1 month), `job_failed` (7 days), `system_daily_limit` (`delete` + `vacuum`, never `truncate`: its `ACCESS EXCLUSIVE` lock queues every create behind open transactions), `user_access_token` (expired), `user_notification` (`EXCEL_EXPORT_COMPLETED` at once, others after 1 month), `history_store` on `history` (1 month); then deletes `storage/larbox/_tmp` files older than 1 day.
-- `app:remove_idle_db_connections`: `pg_terminate_backend` for `idle` / `idle in transaction` connections with empty `application_name`, older than 10 min, on the `main`, `history`, `telescope` databases.
+- `app:remove_idle_db_connections`: `pg_terminate_backend` for `idle` connections (`state = 'idle'` only) with empty `application_name`, `state_change` older than 10 min, on the `main`, `history`, `telescope` databases.
 
 ## Local-only commands (routes/console.php)
 - Under `if (App::environment() !== 'local')` each destructive/dev command is overridden by `Artisan::command('<signature>', $callback)` printing "Not allowed with non-local ENV...": `db:seed`, `db:wipe`, `migrate`, `migrate:fresh|refresh|reset|rollback`, `larbox:export_postman_collection`, `larbox:migrate`, `larbox:test`.

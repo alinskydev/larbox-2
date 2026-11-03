@@ -69,4 +69,4 @@ Write-only scoping (shared catalog):
 - Don't write raw `where('company_id', user()->company_id)` / `whereIn(..., nestedCompanyIds())` — `filterBy*()` handle every user type.
 - Don't add constructors, properties or extra methods; don't share one Filter across controllers or areas.
 - Don't scope in the controller instead of a Filter — the `{model}` binding would leak foreign records.
-- Don't call `queryWithoutAutoFilters()` (zero usages outside `App\Base\Model`).
+- Don't call `queryWithoutAutoFilters()` (zero usages in `http/` and `modules/`; only `App\Base\Model` and the `app:run` scratch command).

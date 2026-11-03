@@ -6,12 +6,12 @@ description: Mandatory standards for HTTP controllers in http/<Area>/<Module>/Co
 # HTTP Controllers Rules
 
 Location: `http/<Area>/<Module>/Controllers/<Entity>Controller.php`, namespace `Http\<Area>\<Module>\Controllers`.
-Bases: `App\Controllers\ResourceController` (CRUD), `App\NestedSet\NestedSetController` (tree entities, extends `ResourceController`), `App\Controllers\Controller` (everything else; `successResponse(int $status = 200)` → `{"message": "Success"}`, `successResponseWithAccessToken(User $user)`).
+Bases: `App\Controllers\ResourceController` (CRUD), `App\NestedSet\NestedSetController` (tree entities, extends `ResourceController`), `App\Controllers\Controller` (everything else; `successResponse(int $status = 200)` → `{"message": "Success"}`, `successResponseWithAccessToken(User $user, int $status = 200)`).
 Canonical: `http/Company/Trade/Controllers/PurchaseController.php`, `http/Company/Stock/Controllers/StockController.php`, `http/Common/User/Controllers/ProfileController.php`.
 
 ## Rules
 - CRUD entity → extend `ResourceController`; the constructor only calls `parent::__construct()` with named args `model: new X()`, `search: new XSearch()`, `filter: new XFilter()`, `formRequestClass: XRequest::class`. Model/Search come from `Modules\<Module>\Models|Search`, Filter/Request from the same HTTP module.
-- Pass only what is used: read-only controllers omit `formRequestClass` (`Company/Trade/Controllers/SaleProductController.php`); `filter` is omitted only for unscoped admin data (`Admin/System/Controllers/LanguageController.php`, `Admin/User/Controllers/UserController.php`, `Admin/Company/Controllers/SubscriptionController.php`); `search` (defaults to a bare `new Search()`) omitted when there is no list (`Admin/User/Controllers/NotificationController.php`). `resourceClass:` defaults to `$model->resourceClass`; pass it only for a different Resource (`Common/User/Controllers/NotificationController.php`).
+- Pass only what is used: read-only controllers omit `formRequestClass` (`Company/Trade/Controllers/SaleProductController.php`); `filter` is omitted only for unscoped admin data (`Admin/System/Controllers/LanguageController.php`, `Admin/User/Controllers/UserController.php`, `Admin/Company/Controllers/SubscriptionController.php`, `Admin/History/Controllers/StoreHttpLogController.php`, Admin `NotificationController`); `search` (defaults to a bare `new Search()`) omitted when there is no list (`Admin/User/Controllers/NotificationController.php`). `resourceClass:` defaults to `$model->resourceClass`; pass it only for a different Resource (`Common/User/Controllers/NotificationController.php`).
 - Controller, Filter and Request are named after the endpoint entity, not the model: `Company/User/Controllers/EmployeeController.php` = `User` + `UserSearch` + `EmployeeFilter` + `EmployeeRequest`.
 - The constructor's closure middleware builds `$this->search->query` from `$model->query()` + `with/filter/sort/show/page_size` + `Filter::process()`, and binds `ValidatesWhenResolved` to `formRequestClass`. `public Model $model` is read by `ResourceFormRequest` for `create`.
 - Tree entities extend `NestedSetController` → inherits `tree()` and `move(NestedSetMoveRequest $request)` (`Company/Product/Controllers/CategoryController.php`). No AdjacencyList controller exists.
@@ -33,7 +33,7 @@ Canonical: `http/Company/Trade/Controllers/PurchaseController.php`, `http/Compan
 - Many extra actions → trait `Controllers/Traits/<Entity>/<Entity>Controller<Feature>Trait.php` with `@mixin Controller`, `use`d in the controller (`ProductControllerExcelImportTrait`).
 - Single-endpoint handlers are invokable `Controller`s with `__invoke()` and `private` helpers (`Admin/History/Controllers/DictionaryController.php`, `Common/System/Controllers/SystemController.php`).
 - Non-CRUD endpoints (auth, profile, settings) extend `Controller` and type-hint concrete requests; current user via `user()` (`Admin/System/Controllers/SettingController.php`, `Common/Auth/Controllers/ResetPasswordController.php`).
-- `common/record/{type}` dropdowns: add a `match ($type)` arm with `RecordIndexParamsDTO(query:, field:, additionalFields:, isAccessible:)` / `RecordCreateParamsDTO(model:, nonLocalizedRules:, localizedRules:, isAccessible:)`, `default => throw new NotFoundHttpException()`; there is no Filter there, scope the query with `filterBy*()` yourself.
+- `common/record/{type}` dropdowns: add a `match ($type)` arm with `RecordIndexParamsDTO(query:, field:, additionalFields:, isAccessible:)` / `RecordCreateParamsDTO(model:, nonLocalizedRules:, localizedRules:, isAccessible:)`, `default => throw new NotFoundHttpException()`; there is no Filter there, scope the query with `filterBy*()` yourself. Non-paginated types branch before the `match` into a `private` method (`product_category_tree` → `productCategoryTree()` in `IndexController`).
 - Areas: **Admin** — back-office, scoping by administered companies; **Company** — tenant endpoints, every resource controller has a Filter; **Common** — auth, profile, notifications, record lists, plain or invokable controllers; **Emulator** — fakes of Storage/Store/Telegram APIs: plain `Controller`, hardcoded responses, no DB, method names mirror the external API (`Emulator/Telegram/Controllers/TelegramController::sendMessage`, `Emulator/Store/Controllers/ProductController::update(int $id)`).
 
 ## Template
@@ -86,6 +86,6 @@ class <Entity>Controller extends ResourceController
 - Don't call `$model->save()`, `DB::transaction()`, `lockForUpdate()` (zero usages in `http/`).
 - Don't `abort()` or throw `\Exception` for business errors (zero `abort(` in `http/`).
 - Don't rely on lazy loading — it throws in `local`/`testing`.
-- Don't put domain logic in controllers — it belongs in `Modules\<Module>\Services` (via `getService()`); validation in Requests, output shaping in Resources.
+- Don't put domain logic in controllers — it belongs in `Modules\<Module>\Services\<Entity>` (via `getService()`); validation in Requests, output shaping in Resources.
 - Don't return arrays/models without `response()->json()` or a Resource.
 - Don't create DTOs or other new class types in `http/` (DTOs exist only in `http/Common/Record/DTOs`).

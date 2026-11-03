@@ -31,15 +31,15 @@ Guidance for AI coding agents working in this repository.
 - `Search/` — `Search` engine (`SearchFilter`, `SearchSort`, `SearchShow`, `Filter/Types`, `Enums/`)
 - `Casts/` (`LocalStorage/`, `ExternalStorage/`: `AsFile(s)`, `AsImage(s)`), `Excel/` (`Export/`, `Import/`), `NestedSet/`, `Observers/` (`CreatorIdObserver`, `CompanyIdObserver`, `SluggableObserver`, `IPObserver`)
 - `Exceptions/BusinessException` — abstract base of `modules/*/Exceptions` (not reported)
-- `Integration/` — abstract `IntegrationService`, `IntegrationException`, `DTOs/`; `Mail/` — `Mail`, `MailHelper`, `SendMailJob`
-- `Helpers/` (incl. `Database/`: `DatabaseTransactionHelper`, `DatabaseMigrationPartitionHelper`, `DatabaseMigrationIndexHelper`, `DatabaseSeederHelper`; `Validation/`, `PdfHelper`, `ImageHelper`), `Jobs/`, `Middleware/`, `Rules/`, `Routing/`, `Loggers/` (`DatabaseLogger` = default log channel), `Database/`, `Providers/`
+- `Integration/` — abstract `IntegrationService`, `IntegrationException`, `IntegrationJob` (generic queued call of a service method, queue `integration`), `DTOs/`; `Mail/` — `Mail`, `MailHelper`, `SendMailJob`
+- `Helpers/` (incl. `Database/`: `DatabaseTransactionHelper`, `DatabaseMigrationPartitionHelper`, `DatabaseMigrationIndexHelper`, `DatabaseSeederHelper`, `DatabaseQueryCheckHelper`; `Validation/`, `PdfHelper`, `ImageHelper`), `Jobs/`, `Middleware/`, `Rules/`, `Routing/`, `Loggers/` (`DatabaseLogger` = default log channel), `Database/`, `Providers/`
 - `Testing/` — `Feature/PostmanTestCase`, `Feature/ScenarioTestCase`, `Feature/Helpers/`, `Feature/Traits/`, `Domain/DomainTestCase`, `Unit/`, `CreatesApplicationTrait`
 - `Utils/*.php` — global functions loaded by composer `autoload.files`: `user()`, `setUser()`, `setUserAsCompanyDirector()`, `singletons()`, `num_round()`, `num_e/ne/gt/gte/lt/lte()`
 - `Console/Commands/` — `App/` (incl. `app:run` scratch command), `Larbox/`, `Examples/` (+ `Deploy/` for one-time scripts, created on demand)
 
 ### Module (`modules/<Module>/`)
 
-Only the dirs it needs: `Database/Migrations/<table>.php`, `Database/Seeders/<table>.php`, `Database/<module>-relations.php` (FKs), `Models/`, `Builders/`, `Enums/`, `Exceptions/`, `Observers/`, `Search/`, `Resources/`, `Services/`, `Helpers/`, `Singletons/`, `Jobs/`, `Excel/`, `PDF/`, `Mail/`, `Telegram/`, `Middleware/`, `Requests/`, `Traits/`, `Tests/<Entity>/` (domain tests).
+Only the dirs it needs: `Database/Migrations/<table>.php`, `Database/Seeders/<table>.php`, `Database/<module>-relations.php` (FKs), `Models/`, `Builders/`, `Enums/`, `Exceptions/`, `Observers/`, `Search/`, `Resources/`, `Services/<Entity>/`, `Helpers/`, `Singletons/`, `Jobs/`, `Excel/`, `PDF/`, `Mail/`, `Telegram/`, `Middleware/`, `Requests/`, `Traits/`, `Tests/<Entity>/` (domain tests).
 
 ### HTTP (`http/<Area>/<Module>/`)
 
@@ -62,7 +62,7 @@ php artisan test             # tests only (DB must already be migrated)
 vendor/bin/pint              # code style (pint.json)
 ```
 
-- Queue workers in dev: `_bats/queue - *.bat` (also `default`, `recalculation`, `tmp`, not used by any job). Every job sets its queue: `excel`, `mail`, `maintenance`, `notification`, `telegram`. All async queue connections use `after_commit => true`, `retry_after` 660.
+- Queue workers in dev: `_bats/queue - *.bat` (also `default`, `recalculation`, `tmp`, not used by any job). Every job sets its queue: `excel`, `integration`, `mail`, `maintenance`, `notification`, `telegram`. All async queue connections use `after_commit => true`, `retry_after` 660.
 - Scheduler (`routes/console.php`): `telescope:prune` (local), `app:process_db_daily` (00:01; chains `RemoveOldDataJob` + `ProcessDBJob` on `maintenance`, cleans `storage/larbox/_tmp`), `app:remove_idle_db_connections` (hourly).
 - `db:seed`, `db:wipe`, `migrate*`, `larbox:migrate`, `larbox:test`, `larbox:export_postman_collection` are blocked outside `local` — never bypass.
 - One-time production changes: `larbox:create_file_for_deploy` creates a script in `app/Console/Commands/Deploy/`; `larbox:deploy` runs each once (tracked in `system_event`), all in one transaction.
@@ -84,9 +84,10 @@ Three suites (`stopOnFailure`/`stopOnError`): `phpunit.xml.dist` (committed) run
 - **DB connections**: `main` (default, incl. audit tables), `history` (only `history_store` / `StoreHttpLog`), `telescope`. Migrations are per-module, timestamp-less, applied only via `larbox:migrate` (`database/migrations/` holds only framework tables); FKs live in `<module>-relations.php` and run after seeders. Partitioning and indexes via `app/Helpers/Database`.
 - **Models**: Laravel config stays in properties (`$table`, `$connection`, `$primaryKey`, `$keyType`, `$incrementing`, `$timestamps`, `$hidden`, `$casts`) and `CREATED_AT`/`UPDATED_AT` consts — no PHP attributes (`#[Table]`, `#[Hidden]`, ...) and no `casts()` method (`Model::__construct` merges the properties; `#[Guarded]` would be ignored). No `$fillable` — every real column is fillable except `id`, `created_at`, `updated_at`, `deleted_at` and `$guarded` (column list cached under `db_schema`). Flags `$shouldHandleDailyLimit`, `$shouldSkipAutoFilters`; `$additionalConnections` joins other connections into `safely*()` transactions (no model sets it yet).
 - **Lazy loading**: `Model::preventLazyLoading()` is on in `local`/`testing` (`AppServiceProvider`) — relations read on collections must be eager-loaded (`with()`, `load()`, `loadMissing()`); it does not catch queries in loops on single models.
+- **Partition check**: in `local`/`testing` `DB::listen` runs `DatabaseQueryCheckHelper::checkPartitions()` (`AppServiceProvider`) — for company users a `select`/`update`/`delete` on a partitioned table without a partition-key (`company_id`) condition throws with the source line.
 - **Multi-tenancy**: models declare `$autoFilters` (`current_company`, `nested_companies`, `holding_companies`, `administered_companies`) on their own columns, applied in `Model::newQuery()`; skipped without a user or via `queryWithoutAutoFilters()`.
 - **Observers** are registered with `self::observe([...])` in model `booted()` (`RecordActionModelTrait` registers its own); params come from `observerParams()` (`daily_limit`, `sluggable`, `audit_record_action`).
-- **Persistence**: `safelySave()`, `safelyDelete()`, `safelyRestore()`, `safelyDBProcess()` (transaction-wrapped); related rows via `fillRelations(...)`. Domain processes (sale, purchase, stock) live in `modules/*/Services`.
+- **Persistence**: `safelySave()`, `safelyDelete()`, `safelyRestore()`, `safelyDBProcess()` (transaction-wrapped); related rows via `fillRelations(...)`. Domain processes (sale, purchase, stock) live in `modules/*/Services/<Entity>/`.
 - **Locks**: only `DatabaseTransactionHelper::lock()` / `lockModel()`, called inside `safelyDBProcess()` (released after commit/rollback, not enforced by the helper); never `lockForUpdate()`.
 - **Business errors**: `modules/<Module>/Exceptions/<Entity>Exception extends BusinessException` with error constants; rendered as 400 `{message}`, not reported. No `abort()` for errors — throw `NotFoundHttpException` (404), `ModelNotFoundException` (400), `AccessDeniedHttpException` (403).
 - **Requests**: result in `$validatedData`; `nonLocalizedRules()` / `localizedRules()`, `$defaults`, `$rawFields`, `additionalValidation()`; uploads via `$fileUploads` / `$imageUploads` (local or external storage, `config/integrations.php`). `ResourceFormRequest` returns 409 on stale `updated_at` (optimistic locking). Input escaped in `prepareForValidation()`.
@@ -94,7 +95,7 @@ Three suites (`stopOnFailure`/`stopOnError`): `phpunit.xml.dist` (committed) run
 - **Excel**: import `phpoffice/phpspreadsheet`, export `avadim/fast-excel-writer`. Export runs sync up to the job's `$instantLimit`, otherwise queued (202, file delivered via notification); `$totalLimit` caps exports. Import is always queued as `ExcelImportJob` chunks of 1000, locked per user by `user.is_excel_import_running`.
 - **PDF**: `App\Helpers\PdfHelper` (dompdf), PHP views in `modules/<Module>/PDF/`, `?format=pdf`. **Mail**: `MailHelper::send()` (queued on `mail`, views `modules/<Module>/Mail/<view>/<locale>.php`).
 - **Telegram**: `Integrations\Telegram\Helpers\TelegramHelper` over plain HTTP (MarkdownV2), queued `TelegramJob`.
-- **Integrations**: extend `App\Integration\IntegrationService` (relogin on 401/403/500, tokens in `Integration\Models\Token`, optional history in `History\Models\StoreHttpLog`). External file storage uses plain `Http`, not `IntegrationService`.
+- **Integrations**: extend `App\Integration\IntegrationService` (relogin on 401/403/500, tokens in `Integration\Models\Token`, optional history in `History\Models\StoreHttpLog`). External file storage uses plain `Http`, not `IntegrationService`. Remote calls from transactional flows (observers) are dispatched as `App\Integration\IntegrationJob` by a model integration service (`modules/<Module>/Services/<Entity>/<Entity>IntegrationService`, `Product::getIntegrationService()`), never called synchronously inside a transaction.
 - **Limits**: `Modules\System\Observers\DailyLimit`, `Modules\Company\Observers\Subscription`.
 - **Concurrency**: `ConcurrentWritesPreventionMiddleware` (429 via `ThrottleRequestsException` on parallel writes, off in local/testing); `IdempotencyMiddleware` (`Idempotency-Key` on POST, cached 600 s, replay header `Idempotent-Replayed`).
 - **Errors**: JSON, centralized in `bootstrap/app.php` (skipped when `APP_DEBUG`), all messages localized via `__()`: 400/401/403/404/422/429, record not found → 400; in production any `QueryException` → 400 `Неверные вводные данные`, otherwise SQLSTATE `22003`, `22P02`, `23503` rewritten; other exceptions keep `getStatusCode()` or 400.
