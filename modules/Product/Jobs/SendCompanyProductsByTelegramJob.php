@@ -50,11 +50,11 @@ class SendCompanyProductsByTelegramJob extends Job
                 'brand:id,name',
             ])
             ->where('company_id', $this->companyId)
-            ->whereNull('deleted_at')
             ->whereBetween('created_at', [
                 date('Y-m-d 00:00:00'),
                 date('Y-m-d 23:59:59'),
             ])
+            ->withoutTrashed()
             ->getQueryWithRelations()
             ->get()
             ->toArray();
