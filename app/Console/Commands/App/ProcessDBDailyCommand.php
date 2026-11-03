@@ -46,7 +46,8 @@ class ProcessDBDailyCommand extends Command
                 new ProcessDBJob(conn: 'main', command: 'vacuum job_failed'),
             ],
             'system_daily_limit' => [
-                new ProcessDBJob(conn: 'main', command: 'truncate table system_daily_limit restart identity'),
+                new ProcessDBJob(conn: 'main', command: 'delete from system_daily_limit'),
+                new ProcessDBJob(conn: 'main', command: 'vacuum system_daily_limit'),
             ],
             'user_access_token' => [
                 new RemoveOldDataJob(

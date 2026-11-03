@@ -2,6 +2,7 @@
 
 namespace Modules\Product\Observers;
 
+use App\Integration\IntegrationJob;
 use Integrations\Store\Services\StoreProductService;
 use Modules\Product\Models\Product;
 
@@ -19,19 +20,33 @@ class ProductObserver
 
     public function created(Product $model): void
     {
-        (new StoreProductService())
-            ->setAdditionalData([
-                'brand_id' => $model->brand->id,
-            ])
-            ->create([
-                'id' => $model->id,
-                'name' => $model->name,
-            ]);
+        (new StoreProductService())->ensureDailyLimit();
+
+        dispatch(new IntegrationJob(
+            service: StoreProductService::class,
+            method: 'create',
+            params: [
+                'data' => [
+                    'id' => $model->id,
+                    'name' => $model->name,
+                ],
+            ],
+            additionalData: [
+                'brand_id' => $model->brand_id,
+            ],
+        ));
     }
 
     public function updated(Product $model): void
     {
-        (new StoreProductService())->update($model->id, $model->toArray());
+        dispatch(new IntegrationJob(
+            service: StoreProductService::class,
+            method: 'update',
+            params: [
+                'id' => $model->id,
+                'data' => $model->toArray(),
+            ],
+        ));
     }
 
     public function saved(Product $model): void
@@ -56,6 +71,12 @@ class ProductObserver
 
     public function deleted(Product $model): void
     {
-        (new StoreProductService())->delete($model->id);
+        dispatch(new IntegrationJob(
+            service: StoreProductService::class,
+            method: 'delete',
+            params: [
+                'id' => $model->id,
+            ],
+        ));
     }
 }

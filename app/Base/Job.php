@@ -46,13 +46,17 @@ class Job implements ShouldQueue
     {
         return [
             function (self $job, \Closure $next) {
+                $previousUser = user();
+                $previousLocale = app()->getLocale();
+
                 if ($job->userId !== null) setUser($job->userId, true);
                 if ($job->locale !== null) app()->setLocale($job->locale);
 
                 try {
                     return $next($job);
                 } finally {
-                    setUser(null);
+                    setUser($previousUser);
+                    app()->setLocale($previousLocale);
                 }
             },
         ];

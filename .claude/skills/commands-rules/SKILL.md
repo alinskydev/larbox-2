@@ -26,7 +26,7 @@ Canonical: `app/Console/Commands/App/ProcessDBDailyCommand.php`, `app/Console/Co
 ## Scheduler (routes/console.php)
 - Format: `Schedule::command('<signature>')->cron('<expr>')->runInBackground()->withoutOverlapping()->onOneServer();`
 - Current: `app:process_db_daily` at `1 0 * * *`, `app:remove_idle_db_connections` at `1 * * * *`, `telescope:prune --hours=48` `->daily()->withoutOverlapping()->onOneServer()` inside `if (App::environment('local'))`.
-- `app:process_db_daily`: per-table chains of `RemoveOldDataJob` / `ProcessDBJob` (`vacuum`, `reindex index concurrently <table>_pkey`) — `audit_error_log` (1 day), `audit_record_action` (1 month), `job_failed` (7 days), `system_daily_limit` (truncate), `user_access_token` (expired), `user_notification` (`EXCEL_EXPORT_COMPLETED` at once, others after 1 month), `history_store` on `history` (1 month); then deletes `storage/larbox/_tmp` files older than 1 day.
+- `app:process_db_daily`: per-table chains of `RemoveOldDataJob` / `ProcessDBJob` (`vacuum`, `reindex index concurrently <table>_pkey`) — `audit_error_log` (1 day), `audit_record_action` (1 month), `job_failed` (7 days), `system_daily_limit` (`delete` + `vacuum`, never `truncate`: its `ACCESS EXCLUSIVE` lock queues every create behind open transactions), `user_access_token` (expired), `user_notification` (`EXCEL_EXPORT_COMPLETED` at once, others after 1 month), `history_store` on `history` (1 month); then deletes `storage/larbox/_tmp` files older than 1 day.
 - `app:remove_idle_db_connections`: `pg_terminate_backend` for `idle` / `idle in transaction` connections with empty `application_name`, older than 10 min, on the `main`, `history`, `telescope` databases.
 
 ## Local-only commands (routes/console.php)
@@ -41,7 +41,7 @@ Canonical: `app/Console/Commands/App/ProcessDBDailyCommand.php`, `app/Console/Co
 
 ## One-time deploy scripts
 - Never put one-time production changes (data fixes, manual schema changes) into a command or migration: run `php artisan larbox:create_file_for_deploy` → `app/Console/Commands/Deploy/<Y_m_d__H_i_s>.php` returning an anonymous class with `run(): void`.
-- `larbox:deploy` (after each deploy): inside one `(new Model())->safelyDBProcess()` runs `(require $file)->run()` for every `Deploy/*.php` not yet in `system_event` (`project = config('app.name')`, `type = EventTypeEnum::DEPLOY`, `additional->>'file'` = file name) and inserts the event; then flushes `db_schema` tag, `system_languages`, `system_settings`, `system_public_data` tag, runs `optimize` and `queue:restart`, sends "✅ Successful deploy" via `TelegramHelper::sendMessage()` to `devChats()`. On error: `optimize:clear` + "❌ Error in deploy" with message and trace.
+- `larbox:deploy` (after each deploy): inside one `(new Model())->safelyDBProcess()` sets `SET LOCAL lock_timeout = '5s'`, then runs `(require $file)->run()` for every `Deploy/*.php` not yet in `system_event` (`project = config('app.name')`, `type = EventTypeEnum::DEPLOY`, `additional->>'file'` = file name) and inserts the event; then flushes `db_schema` tag, `system_languages`, `system_settings`, `system_public_data` tag, runs `optimize` and `queue:restart`, sends "✅ Successful deploy" via `TelegramHelper::sendMessage()` to `devChats()`. On error: `optimize:clear` + "❌ Error in deploy" with message and trace.
 - A script runs once per file name: to change data again, create a new file. A new cached singleton key must also be forgotten in `DeployCommand::handle()`.
 
 ## Template
