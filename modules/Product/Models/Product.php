@@ -17,6 +17,7 @@ use Modules\Audit\Traits\RecordActionModelTrait;
 use Modules\Company\Models\Company;
 use Modules\Company\Observers\Subscription\SubscriptionCheckLimitObserver;
 use Modules\Product\Observers\ProductObserver;
+use Modules\Product\Services\Product\ProductIntegrationService;
 use Modules\Seo\Traits\SeoMetaModelTrait;
 use Modules\Stock\Models\Product as StockProduct;
 use Modules\System\Observers\DailyLimit\DailyLimitCreateObserver;
@@ -30,7 +31,7 @@ use Modules\User\Models\User;
  * @property int $category_id
  * @property int $brand_id
  * @property string $name
- * @property string $full_text
+ * @property string $full_name
  * @property string $slug
  * @property ?string $description
  * @property string $barcode
@@ -78,7 +79,7 @@ class Product extends Model
                 'excluded' => ['image_list_thumbs', 'image_list_thumbs.*'],
                 'relations' => [
                     'belongsTo' => [
-                        'parent_id' => 'parent.full_text',
+                        'parent_id' => 'parent.full_name',
                         'brand_id' => 'brand.name',
                         'category_id' => 'category.name',
                     ],
@@ -134,6 +135,11 @@ class Product extends Model
     public function stock_products(): HasMany
     {
         return $this->hasMany(StockProduct::class, 'product_id');
+    }
+
+    public function getIntegrationService(): ProductIntegrationService
+    {
+        return new ProductIntegrationService($this);
     }
 
     protected static function booted(): void

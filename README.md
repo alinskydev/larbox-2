@@ -68,7 +68,7 @@ All code follows a single standard and a consistent style: every layer (models, 
 | `Requests/` | Form requests reused outside a single HTTP area |
 | `Resources/` | JSON response shape of a model |
 | `Search/` | List queries: allowed filters, sorts, `with[]` relations and `show[]` options |
-| `Services/` | Domain logic and processes (sale, purchase, stock movement) in transactions |
+| `Services/<Entity>/` | Domain logic and processes (sale, purchase, stock movement) in transactions, one folder per model |
 | `Singletons/` | Data loaded once per request (e.g. system settings, languages) |
 | `Telegram/` | Telegram message templates |
 | `Tests/<Entity>/` | Domain tests of services, independent of HTTP |

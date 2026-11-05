@@ -11,7 +11,7 @@ use Modules\System\Helpers\DailyLimitHelper;
 
 class StoreProductService extends StoreBaseService
 {
-    protected function ensureDailyLimit(): void
+    public function ensureDailyLimit(): void
     {
         DailyLimitHelper::ensure(
             entityType: DailyLimitEntityTypeEnum::COMPANY,

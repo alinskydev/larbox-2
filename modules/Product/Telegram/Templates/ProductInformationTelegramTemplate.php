@@ -14,7 +14,7 @@ class ProductInformationTelegramTemplate
         $locale = app()->getLocale();
 
         $data = [
-            '*Product:* ' => $product->full_text,
+            '*Product:* ' => $product->full_name,
             '*Category:* ' => $product->category->name[$locale] ?? '',
             '*Brand:* ' => $product->brand->name,
             '*Price:* ' => $product->price ? NumberHelper::formatAmountWithCurrency($product->price->price) : '',

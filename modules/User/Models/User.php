@@ -20,7 +20,7 @@ use Modules\Company\Observers\Subscription\SubscriptionCheckLimitObserver;
 use Modules\System\Observers\DailyLimit\DailyLimitCreateObserver;
 use Modules\User\Builders\UserBuilder;
 use Modules\User\Observers\UserObserver;
-use Modules\User\Services\UserService;
+use Modules\User\Services\User\UserService;
 
 /**
  * @property int $id

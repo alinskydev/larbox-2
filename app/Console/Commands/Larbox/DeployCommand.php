@@ -51,6 +51,8 @@ class DeployCommand extends Command
         $files = glob(base_path('app/Console/Commands/Deploy/*.php'));
 
         (new Model())->safelyDBProcess(function () use ($files) {
+            DB::statement("SET LOCAL lock_timeout = '5s'");
+
             foreach ($files as $file) {
                 $fileName = File::basename($file);
 

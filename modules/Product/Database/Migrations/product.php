@@ -27,7 +27,7 @@ return new class() extends Migration
                     $table->bigInteger('category_id')->index();
                     $table->bigInteger('brand_id')->index();
                     $table->string('name');
-                    $table->string('full_text');
+                    $table->string('full_name');
                     $table->string('slug')->index();
                     $table->text('description')->nullable();
                     $table->string('barcode')->index();
@@ -40,7 +40,7 @@ return new class() extends Migration
             },
         );
 
-        DatabaseMigrationIndexHelper::createGinIndex('product', 'full_text');
+        DatabaseMigrationIndexHelper::createGinIndex('product', 'full_name');
     }
 
     /**

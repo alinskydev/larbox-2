@@ -28,7 +28,7 @@ class ProductExcelExportWriter extends ExcelExportWriter
 
     protected function fillHeaderCells(): void
     {
-        $this->sheet->writeTo([1, 1], __('fields.full_text'));
+        $this->sheet->writeTo([1, 1], __('fields.full_name'));
         $this->sheet->writeTo([2, 1], __('fields.company_id'));
         $this->sheet->writeTo([3, 1], __('fields.category_id'));
         $this->sheet->writeTo([4, 1], __('fields.brand_id'));
@@ -45,7 +45,7 @@ class ProductExcelExportWriter extends ExcelExportWriter
             $categoryName = json_decode($record->category->name, true);
 
             $this->sheet->writeRow(ExcelExportHelper::sanitizeRow([
-                $record->full_text,
+                $record->full_name,
                 $record->company->name,
                 $categoryName[$locale] ?? '',
                 $record->brand->name,
@@ -59,7 +59,7 @@ class ProductExcelExportWriter extends ExcelExportWriter
     protected function afterFilling(): void
     {
         $this->tryToHideColumns([
-            'full_text' => 1,
+            'full_name' => 1,
             'company_id' => 2,
             'category_id' => 3,
             'brand_id' => 4,

@@ -54,6 +54,7 @@ class SendCompanyProductsByTelegramJob extends Job
                 date('Y-m-d 00:00:00'),
                 date('Y-m-d 23:59:59'),
             ])
+            ->withoutTrashed()
             ->getQueryWithRelations()
             ->get()
             ->toArray();

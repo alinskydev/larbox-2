@@ -24,6 +24,8 @@ class ExcelImportHelper
             $field = implode(' ', $fieldParts);
         }
 
+        unset($field);
+
         $sheet->fromArray($data);
         $writer = new Xlsx($spreadsheet);
 

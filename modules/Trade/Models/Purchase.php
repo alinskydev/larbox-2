@@ -13,7 +13,7 @@ use Modules\Stock\Models\Batch;
 use Modules\Stock\Models\Stock;
 use Modules\System\Observers\DailyLimit\DailyLimitCreateObserver;
 use Modules\Trade\Observers\PurchaseObserver;
-use Modules\Trade\Services\PurchaseService;
+use Modules\Trade\Services\Purchase\PurchaseService;
 use Modules\User\Models\User;
 
 /**

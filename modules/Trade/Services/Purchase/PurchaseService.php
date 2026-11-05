@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Trade\Services;
+namespace Modules\Trade\Services\Purchase;
 
 use App\Base\ModelService;
 use App\Helpers\Database\DatabaseTransactionHelper;

@@ -12,7 +12,7 @@ use Modules\Company\Models\Company;
 use Modules\Stock\Models\Stock;
 use Modules\System\Observers\DailyLimit\DailyLimitCreateObserver;
 use Modules\Trade\Observers\SaleObserver;
-use Modules\Trade\Services\SaleService;
+use Modules\Trade\Services\Sale\SaleService;
 use Modules\User\Models\User;
 
 /**

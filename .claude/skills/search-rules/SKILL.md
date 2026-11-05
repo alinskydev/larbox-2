@@ -28,7 +28,7 @@ Canonical: `modules/Trade/Search/SaleSearch.php` (plain), `modules/Product/Searc
 - Available, zero usages: `BETWEEN_DATETIME`, `DATE`, `DATETIME`, `JSON_CONTAINS_ANY`, `JSON_CONTAINS_ALL`, `NOT_EQUAL_RAW`, `SIMILARITY` (pg_trgm `%`).
 - Columns are auto-qualified with the query table (`SearchFilterType::__construct`, skipped when `from` has an ` as ` alias), safe with joins.
 - Relation filter: dotted key; last segment = column, prefix = `whereHas` / `orWhereHas` path (`'price.price' => BETWEEN_NUMBER`, `'roles.id' => IN`).
-- OR-group (one param over several columns, wrapped in `where(fn)`): `'search' => ['condition' => SearchFilterConditionEnum::OR_WHERE, 'filters' => ['full_text' => LIKE, 'barcode' => EQUAL_RAW]]` (`ProductSearch` `search` / `category_id` incl. `'category.ancestors.id'`, `LanguageSearch` `search`, `UserSearch` `username_or_phone`).
+- OR-group (one param over several columns, wrapped in `where(fn)`): `'search' => ['condition' => SearchFilterConditionEnum::OR_WHERE, 'filters' => ['full_name' => LIKE, 'barcode' => EQUAL_RAW]]` (`ProductSearch` `search` / `category_id` incl. `'category.ancestors.id'`, `LanguageSearch` `search`, `UserSearch` `username_or_phone`).
 
 ## Overrides
 - Override only `with()`, `filter()`, `show()`: `parent::<method>($params);` first, then modify `$this->query`, then `return $this;`.

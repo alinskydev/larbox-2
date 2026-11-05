@@ -22,9 +22,9 @@ class RemoveIdleDBConnectionsCommand extends Command
 
         DB::table('pg_stat_activity')
             ->selectRaw('pg_terminate_backend(pid)')
-            ->whereIn('state', ['idle', 'idle in transaction'])
+            ->where('state', 'idle')
             ->where('application_name', '')
-            ->where('query_start', '<', $datetime)
+            ->where('state_change', '<', $datetime)
             ->whereIn('datname', $databases)
             ->get();
     }
