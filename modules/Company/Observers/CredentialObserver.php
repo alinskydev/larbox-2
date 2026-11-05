@@ -50,6 +50,8 @@ class CredentialObserver
             $chat['chat_id'] = (int)$chat['chat_id'];
         }
 
+        unset($chat);
+
         $model->telegram_chats = $telegramChats;
     }
 }
